@@ -1,9 +1,8 @@
-import { Body, Controller, Get, HttpException, Post, Req, UseGuards } from '@nestjs/common';
-import { LoginPayloadDto } from './dto/login.dto';
-import { AuthService } from './auth.service';
-import { LocalGuard } from '../../common/guards/local.guard';
-import { JwtAuthGuard } from '../../common/guards/jwt.guard';
-import { Request } from 'express';
+import { Controller, Post, UseGuards, Body, HttpException, Req, Get } from "@nestjs/common"
+import { LocalGuard, RefreshJwtAuthGuard, JwtAuthGuard } from "src/common/guards"
+import { AuthService } from "./auth.service"
+import { LoginPayloadDto } from "./dto"
+
 
 @Controller('auth')
 export class AuthController {
@@ -12,17 +11,28 @@ export class AuthController {
 
     @Post('login')
     @UseGuards(LocalGuard)
-    login(@Body() authPayloadDto: LoginPayloadDto) {
-        const token = this.authService.login(authPayloadDto)
-        if (!token) {
+    async login(@Body() authPayloadDto: LoginPayloadDto) {
+        const { accessToken, refreshToken } = await this.authService.login(authPayloadDto)
+        if (!accessToken || !refreshToken) {
             throw new HttpException('Invalid credentials', 401)
         }
-        return { token }
+        return { accessToken, refreshToken }
+    }
+
+    @Post('refreshToken')
+    @UseGuards(RefreshJwtAuthGuard)
+    async refreshToken(@Req() req) {
+        console.log(req)
+        const { accessToken } = await this.authService.refreshToken(req.user)
+        if (!accessToken) {
+            throw new HttpException('Invalid credentials', 401)
+        }
+        return { accessToken }
     }
 
     @Get('status')
     @UseGuards(JwtAuthGuard)
-    status(@Req() req: Request) {
+    status(@Req() req) {
         console.log(req.user);
     }
 

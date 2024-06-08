@@ -1,9 +1,8 @@
-import { Body, Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { CurrencyService } from './currency.service';
-import { JwtAuthGuard } from 'src/common/guards/jwt.guard';
-import { firstValueFrom } from 'rxjs';
-import { FindCurrencyPayloadDto } from './dto/findCurrencyPayloadDto.dto';
-
+import { Controller, Get, UseGuards, Body } from "@nestjs/common"
+import { firstValueFrom } from "rxjs"
+import { JwtAuthGuard } from "src/common/guards"
+import { CurrencyService } from "./currency.service"
+import { FindCurrencyPayloadDto } from "./dto"
 
 @Controller('currency')
 export class CurrencyController {

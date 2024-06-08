@@ -1,19 +1,22 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AuthModule } from './modules/auth/auth.module';
-import { ConfigModule } from '@nestjs/config';
-import { CurrencyModule } from './modules/currency/currency.module';
+import { Module } from "@nestjs/common";
+import { AppService } from "./app.service";
+import { MongooseModule } from "@nestjs/mongoose";
+import { AuthModule } from "./modules/auth";
+import { CurrencyModule } from "./modules/currency";
+import { ConfigModule } from "@nestjs/config";
+import { UsersModule } from "./modules/users";
+
 
 @Module({
-  controllers: [AppController],
   providers: [AppService],
   imports: [
+    MongooseModule.forRoot('mongodb://localhost/nestjs'),
     AuthModule,
     CurrencyModule,
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,
-    })],
+    }),
+    UsersModule],
 })
 export class AppModule { }

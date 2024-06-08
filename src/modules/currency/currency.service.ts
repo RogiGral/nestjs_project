@@ -1,7 +1,7 @@
-import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
-import { AxiosResponse } from 'axios';
-import { Observable } from 'rxjs';
+import { HttpService } from "@nestjs/axios";
+import { Injectable } from "@nestjs/common";
+import { AxiosResponse } from "axios";
+import { Observable } from "rxjs";
 
 @Injectable()
 export class CurrencyService {

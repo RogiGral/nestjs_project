@@ -1,33 +1,47 @@
-import { Injectable } from '@nestjs/common';
-import { LoginPayloadDto } from './dto/login.dto';
-import { JwtService } from '@nestjs/jwt';
-
-const fakeUsers = [
-    {
-        id: 1,
-        username: 'igor',
-        email: 'igor@gmail.com',
-        password: 'password321'
-    },
-    {
-        id: 1,
-        username: 'robert',
-        email: 'robert@gmail.com',
-        password: 'password123'
-    }
-]
+import { Injectable } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { UsersService } from "../users/users.service";
+import { LoginPayloadDto } from "./dto";
 
 @Injectable()
 export class AuthService {
 
-    constructor(private jwtService: JwtService) { }
+    constructor(
+        private jwtService: JwtService,
+        private usersService: UsersService) { }
 
-    login({ username, password }: LoginPayloadDto) {
-        const findUser = fakeUsers.find((user) => user.username === username)
-        if (!findUser) return null;
-        if (password === findUser.password) {
-            const { password, ...user } = findUser
-            return this.jwtService.sign(user)
+    async validateUser({ username, password }: LoginPayloadDto): Promise<any> {
+        const userFromDB = await this.usersService.findByUsername(username);
+        if (!userFromDB) return null;
+        if (password === userFromDB.password) {
+            const { password, ...user } = userFromDB;
+            return { user };
         }
+        return null;
     }
+
+    async login({ username, password }: LoginPayloadDto): Promise<any> {
+        const userFromDB = await this.usersService.findByUsername(username);
+        if (!userFromDB) return null;
+        if (password === userFromDB.password) {
+            const { password, ...user } = userFromDB;
+            return {
+                accessToken: this.jwtService.sign(user),
+                refreshToken: this.jwtService.sign(user, { expiresIn: '1d' }),
+            };
+        }
+        return null;
+    }
+
+    async refreshToken({ username }: LoginPayloadDto): Promise<any> {
+        const userFromDB = await this.usersService.findByUsername(username);
+        if (userFromDB) {
+            const { password, ...user } = userFromDB;
+            return {
+                accessToken: this.jwtService.sign(user),
+            };
+        }
+        return null;
+    }
+
 }
