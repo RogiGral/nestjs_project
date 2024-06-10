@@ -11,8 +11,8 @@ export class AuthController {
 
     @Post('login')
     @UseGuards(LocalGuard)
-    async login(@Body() authPayloadDto: LoginPayloadDto) {
-        const { accessToken, refreshToken } = await this.authService.login(authPayloadDto)
+    async login(@Body() loginPayloadDto: LoginPayloadDto) {
+        const { accessToken, refreshToken } = await this.authService.login(loginPayloadDto)
         if (!accessToken || !refreshToken) {
             throw new HttpException('Invalid credentials', 401)
         }
@@ -30,10 +30,5 @@ export class AuthController {
         return { accessToken }
     }
 
-    @Get('status')
-    @UseGuards(JwtAuthGuard)
-    status(@Req() req) {
-        console.log(req.user);
-    }
 
 }

@@ -1,7 +1,7 @@
 import { HttpModule } from "@nestjs/axios";
 import { Module } from "@nestjs/common";
-import { CurrencyController } from "./currency.controller";
-import { CurrencyService } from "./currency.service";
+import { CurrencyController } from "./currencies.controller";
+import { CurrencyService } from "./currencies.service";
 
 
 @Module({
