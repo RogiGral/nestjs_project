@@ -1,7 +1,7 @@
-import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
-import { AxiosResponse } from 'axios';
-import { Observable } from 'rxjs';
+import { HttpService } from "@nestjs/axios";
+import { Injectable } from "@nestjs/common";
+import { AxiosResponse } from "axios";
+import { Observable } from "rxjs";
 
 @Injectable()
 export class CurrencyService {
@@ -14,12 +14,12 @@ export class CurrencyService {
         const url = `https://${this.host}/latest?amount=${amount}&from=${from}&to=${to}`
         return this.httpService.get(url);
     }
-    getAllLatestCurrencyFromTo(from: string, to: string): Observable<AxiosResponse<any>> {
+    getAllLatestCurrenciesFromTo(from: string, to: string): Observable<AxiosResponse<any>> {
         const url = `https://${this.host}/latest?from=${from}&to=${to}`
         return this.httpService.get(url);
     }
 
-    getAllHistoricalCurrencyFromTo(from: string, to: string, startDate: string, endDate: string): Observable<AxiosResponse<any>> {
+    getAllHistoricalCurrenciesFromTo(from: string, to: string, startDate: string, endDate: string): Observable<AxiosResponse<any>> {
         const url = `https://${this.host}/${startDate}..${endDate}?from=${from}&to=${to}`
         return this.httpService.get(url);
     }

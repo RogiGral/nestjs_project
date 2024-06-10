@@ -1,9 +1,8 @@
-import { Body, Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { CurrencyService } from './currency.service';
-import { JwtAuthGuard } from 'src/common/guards/jwt.guard';
-import { firstValueFrom } from 'rxjs';
-import { FindCurrencyPayloadDto } from './dto/findCurrencyPayloadDto.dto';
-
+import { Controller, Get, UseGuards, Body } from "@nestjs/common"
+import { firstValueFrom } from "rxjs"
+import { JwtAuthGuard } from "src/common/guards"
+import { CurrencyService } from "./currencies.service"
+import { FindCurrencyPayloadDto } from "./dto"
 
 @Controller('currency')
 export class CurrencyController {
@@ -26,8 +25,8 @@ export class CurrencyController {
   @UseGuards(JwtAuthGuard)
   async historicalCurrencyStatus(@Body() payload: FindCurrencyPayloadDto) {
     try {
-      const { from, to, startDate, endDate, amount } = payload
-      const response = await firstValueFrom(this.currencyService.getAllHistoricalCurrencyFromTo(from, to, startDate, endDate))
+      const { from, to, startDate, endDate } = payload
+      const response = await firstValueFrom(this.currencyService.getAllHistoricalCurrenciesFromTo(from, to, startDate, endDate))
       return response.data
     } catch (error) {
       console.error('Error fetching currencies:', error)
