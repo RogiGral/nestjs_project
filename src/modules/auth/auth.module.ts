@@ -1,13 +1,13 @@
-import { Global, Module } from "@nestjs/common";
-import { ConfigService, ConfigModule } from "@nestjs/config";
-import { JwtModule } from "@nestjs/jwt";
-import { PassportModule } from "@nestjs/passport";
-import { UsersModule } from "../users/users.module";
-import { AuthController } from "./auth.controller";
-import { AuthService } from "./auth.service";
-import { LocalStrategy } from "../../common/strategies/local.strategy";
-import { JwtStrategy } from "../../common/strategies/jwt.strategy";
-import { RefreshJwtStrategy } from "../../common/strategies/refresh-jwt.strategy";
+import { Global, Module } from '@nestjs/common';
+import { ConfigService, ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { UsersModule } from '../users/users.module';
+import { AuthController } from './controllers/auth.controller';
+import { AuthService } from './services/auth.service';
+import { LocalStrategy } from '../../common/strategies/local.strategy';
+import { JwtStrategy } from '../../common/strategies/jwt.strategy';
+import { RefreshJwtStrategy } from '../../common/strategies/refresh-jwt.strategy';
 
 @Global()
 @Module({
@@ -21,7 +21,7 @@ import { RefreshJwtStrategy } from "../../common/strategies/refresh-jwt.strategy
       }),
       inject: [ConfigService],
     }),
-    UsersModule
+    UsersModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy, RefreshJwtStrategy],
