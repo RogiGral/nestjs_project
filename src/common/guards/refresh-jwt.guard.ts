@@ -4,9 +4,9 @@ import { Observable } from 'rxjs';
 
 @Injectable()
 export class RefreshJwtAuthGuard extends AuthGuard('refresh-jwt') {
-    canActivate(
-        context: ExecutionContext,
-    ): boolean | Promise<boolean> | Observable<boolean> {
-        return super.canActivate(context);
-    }
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
+    return super.canActivate(context);
+  }
 }

@@ -1,1 +1,1 @@
-export * from "./passwordUtility"
+export * from './passwordUtility';

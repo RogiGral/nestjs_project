@@ -1,1 +1,1 @@
-export * from './findCurrencyPayloadDto.dto'
+export * from './find-currency-payload.dto';
