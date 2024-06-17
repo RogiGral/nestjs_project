@@ -10,6 +10,9 @@ export class UserEntity {
 
   @Prop({ required: true })
   password: string;
+
+  @Prop({ type: [String], required: true })
+  claims: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(UserEntity);

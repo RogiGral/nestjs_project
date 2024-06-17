@@ -1,5 +1,4 @@
-import { Exclude } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsEmail, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
 
 export class UserDto {
   @IsString()
@@ -13,7 +12,11 @@ export class UserDto {
 
   @IsString()
   @IsNotEmpty()
-  @Exclude()
   password: string;
+
+  @ValidateIf(o => o.claims != undefined)
+  @IsArray()
+  @IsString({ each: true })
+  claims: string[];
 
 }
