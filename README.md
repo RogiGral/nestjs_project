@@ -1,31 +1,3 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-  
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
 ## Installation
 
 ```bash
@@ -58,16 +30,247 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Support
+# Users Controller
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Endpoints
 
-## Stay in touch
+### 1. Create User
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+URL: /users/create
+Method: POST
+Guards: JwtAuthGuard, ClaimsGuard
+Claims: RequiredClaims.CAN_ACCESS_USER_CREATE
+
+Description:
+
+Creates a new user. The request body should contain the user details in the form of a UserDto.
+
+Request Body:
+
+```json
+{
+  "username": "string",
+  "password": "string",
+  "claims": ["claim1", "claim2"]
+}
+```
+
+Response:
+
+Returns the created user object.
+
+Error Codes:
+
+- 302 FOUND if the user already exists.
+- 400 BAD REQUEST if the claims are invalid.
+
+### 2. Register User
+
+URL: /users/register
+Method: POST
+
+Description:
+
+Registers a new user. This endpoint does not require authentication or claims.
+
+Request Body:
+
+```json
+{
+  "username": "string",
+  "password": "string"
+}
+```
+
+Response:
+
+Returns the created user object.
+
+Error Codes:
+
+- 302 FOUND if the user already exists.
+
+### 3. Get All Users
+
+URL: /users
+Method: GET
+Guards: JwtAuthGuard, ClaimsGuard
+Claims: RequiredClaims.CAN_ACCESS_USER_READ
+
+Description:
+
+Retrieves a list of all users.
+
+Response:
+
+Returns an array of user objects.
+
+### 4. Check User Status
+
+URL: /users/status
+Method: GET
+Guards: JwtAuthGuard, ClaimsGuard
+Claims: RequiredClaims.CAN_ACCESS_USER_STATUS
+
+Description:
+
+Checks the status of the currently authenticated user.
+
+Response:
+
+Returns the user object.
+
+Error Codes:
+
+- 404 NOT FOUND if the user does not exist.
+
+### 5. Get User by ID
+
+URL: /users/:id
+Method: GET
+Guards: JwtAuthGuard, ClaimsGuard
+Claims: RequiredClaims.CAN_ACCESS_USER_READ
+
+Description:
+
+Retrieves a user by their ID.
+
+Response:
+
+Returns the user object.
+
+Error Codes:
+
+- 400 BAD REQUEST if the ID is invalid.
+- 404 NOT FOUND if the user does not exist.
+
+### 6. Get User by Username
+
+URL: /users/:username
+Method: GET
+Guards: JwtAuthGuard, ClaimsGuard
+Claims: RequiredClaims.CAN_ACCESS_USER_READ
+
+Description:
+
+Retrieves a user by their username.
+
+Response:
+
+Returns the user object.
+
+Error Codes:
+
+- 404 NOT FOUND if the user does not exist.
+
+### 7. Update User
+
+URL: /users/:id
+Method: PATCH
+Guards: JwtAuthGuard, ClaimsGuard
+Claims: RequiredClaims.CAN_ACCESS_USER_UPDATE
+Pipes: ValidationPipe
+
+Description:
+
+Updates a user's information.
+
+Request Body:
+
+```json
+{
+  "username": "string",
+  "password": "string"
+}
+```
+
+Response:
+
+Returns the updated user object.
+
+Error Codes:
+
+- 400 BAD REQUEST if the ID is invalid.
+
+### 8. Delete User
+
+URL: /users/:id
+Method: DELETE
+Guards: JwtAuthGuard, ClaimsGuard
+Claims: RequiredClaims.CAN_ACCESS_USER_DELETE
+
+Description:
+
+Deletes a user by their ID. A user cannot delete themselves.
+
+Response:
+
+Returns a success message.
+
+Error Codes:
+
+- 400 BAD REQUEST if the ID is invalid.
+- 403 FORBIDDEN if the user tries to delete themselves.
+
+### 9. Add Claims to User
+
+URL: /users/:id/claims
+Method: PATCH
+Guards: JwtAuthGuard, ClaimsGuard
+Claims: RequiredClaims.CAN_ACCESS_USER_UPDATE
+
+Description:
+
+Adds claims to a user.
+
+Request Body:
+
+```json
+{
+  "claims": ["claim1", "claim2"]
+}
+```
+
+Response:
+
+Returns the updated user object.
+
+Error Codes:
+
+- 400 BAD REQUEST if the ID or claims are invalid.
+- 404 NOT FOUND if the user does not exist.
+
+## Guards and Claims
+
+### Guards
+
+- JwtAuthGuard: Ensures the request is authenticated using JWT.
+- ClaimsGuard: Ensures the user has the necessary claims to access the endpoint.
+
+### Claims
+
+- RequiredClaims.CAN_ACCESS_USER_CREATE
+- RequiredClaims.CAN_ACCESS_USER_READ
+- RequiredClaims.CAN_ACCESS_USER_UPDATE
+- RequiredClaims.CAN_ACCESS_USER_DELETE
+- RequiredClaims.CAN_ACCESS_USER_STATUS
+
+## Utility Methods
+
+- validateClaims
+
+Description:
+
+Validates the provided claims to ensure they are within the set of allowed claims.
+
+Parameters:
+
+- claims: string[]: The claims to validate.
+
+Returns:
+
+- boolean: true if all claims are valid, false otherwise.
 
 ## License
 
-  Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
