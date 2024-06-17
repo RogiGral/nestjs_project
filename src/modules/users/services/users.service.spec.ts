@@ -1,6 +1,6 @@
 import { getModelToken } from "@nestjs/mongoose";
 import { TestingModule, Test } from "@nestjs/testing";
-import { UserEntity } from "..//../../entity";
+import { UserEntity } from "../../../entitities";
 import { UsersService } from "./users.service";
 import { NotFoundException } from "@nestjs/common";
 

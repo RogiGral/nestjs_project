@@ -12,4 +12,5 @@ export const ValidatePassword = async (
   savedPassword: string,
 ) => {
   return await bcrypt.compare(enteredPassword, savedPassword);
+
 };

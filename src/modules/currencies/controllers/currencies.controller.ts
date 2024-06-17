@@ -1,17 +1,21 @@
-import { Controller, Get, UseGuards, Body } from '@nestjs/common';
+import { Controller, Get, UseGuards, Body, Req } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { CurrencyService } from '../services';
-import { JwtAuthGuard } from '../../../common/guards';
-
+import { ClaimsGuard, JwtAuthGuard } from '../../../common/guards';
+import { Claims } from '../../../common/decorators';
+import { Claims as RequiredClaims } from '../../../common/consts/claims';
 @Controller('currency')
 export class CurrencyController {
-  constructor(private readonly currencyService: CurrencyService) { }
+  constructor(
+    private readonly currencyService: CurrencyService
+  ) { }
 
   @Get('/calculate')
-  @UseGuards(JwtAuthGuard)
-  async currentCurrencyStatus(@Body() payload: any) {
+  @UseGuards(JwtAuthGuard, ClaimsGuard)
+  @Claims(RequiredClaims.CAN_ACCESS_CALCULATE)
+  async currentCurrencyStatus(@Req() request: any) {
     try {
-      const { from, to, amount } = payload;
+      const { from, to, amount } = request.body;
       const response = await firstValueFrom(
         this.currencyService.convertCurrencyFromTo(from, to, amount),
       );
@@ -22,7 +26,8 @@ export class CurrencyController {
   }
 
   @Get('/historical')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ClaimsGuard)
+  @Claims(RequiredClaims.CAN_ACCESS_HISTORICAL)
   async historicalCurrencyStatus(@Body() payload: any) {
     try {
       const { from, to, startDate, endDate } = payload;
