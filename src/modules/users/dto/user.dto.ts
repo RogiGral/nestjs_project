@@ -10,6 +10,23 @@ export class UserDto {
   @IsEmail()
   email: string;
 
+
+}
+
+export class CreateUserDto extends UserDto {
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  claims: string[];
+
+}
+
+export class RegisterUserDto extends UserDto {
+
   @IsString()
   @IsNotEmpty()
   password: string;
@@ -18,5 +35,9 @@ export class UserDto {
   @IsArray()
   @IsString({ each: true })
   claims: string[];
+
+}
+
+export class UpdateUserDto extends CreateUserDto {
 
 }
