@@ -31,12 +31,12 @@ export class UsersService {
   }
 
   async findAll() {
-    const data = await this.userModel.find().populate('invoices').select(EXCLUDE_FIELDS).exec();
+    const data = await this.userModel.find().select(EXCLUDE_FIELDS).exec();
     return { data };
   }
 
   async findOne(id: string) {
-    const findUser = await this.userModel.findOne({ _id: id }).populate('invoices').select(EXCLUDE_FIELDS).exec();
+    const findUser = await this.userModel.findOne({ _id: id }).select(EXCLUDE_FIELDS).exec();
     return findUser;
   }
 
