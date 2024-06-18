@@ -131,7 +131,7 @@ export class UsersController {
     if (claims && !this.validateClaims(claims)) {
       throw new HttpException("Invalid claims", HttpStatus.BAD_REQUEST)
     }
-    const findUser = await this.usersService.findOne(id);
+    const { findUser } = await this.usersService.findOne(id);
     if (!findUser) throw new NotFoundException(`User with id '${id}' not found!`);
 
     findUser.claims = [...new Set([...findUser.claims, ...claims])];
@@ -151,7 +151,7 @@ export class UsersController {
     if (claims && !this.validateClaims(claims)) {
       throw new HttpException("Invalid claims", HttpStatus.BAD_REQUEST)
     }
-    const findUser = await this.usersService.findOne(id);
+    const { findUser } = await this.usersService.findOne(id);
     if (!findUser) throw new NotFoundException(`User with id '${id}' not found!`);
 
     findUser.claims = findUser.claims.filter(claim => !claims.includes(claim));

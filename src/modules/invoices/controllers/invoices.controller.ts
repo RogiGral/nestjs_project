@@ -2,13 +2,14 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { InvoicesService } from '../services/invoices.service';
 import { CreateInvoiceDto } from '../dto/create-invoice.dto';
 import { UpdateInvoiceDto } from '../dto/update-invoice.dto';
+import { InvoiceEntity } from '../../../entitities';
 
 @Controller('invoices')
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) { }
 
   @Post()
-  create(@Body() createInvoiceDto: CreateInvoiceDto) {
+  create(@Body() createInvoiceDto: CreateInvoiceDto): Promise<InvoiceEntity> {
     return this.invoicesService.create(createInvoiceDto);
   }
 

@@ -31,18 +31,18 @@ export class UsersService {
   }
 
   async findAll() {
-    const data = await this.userModel.find().select(EXCLUDE_FIELDS).exec();
-    return { data };
+    const findUsers = await this.userModel.find().select(EXCLUDE_FIELDS).exec();
+    return { findUsers };
   }
 
   async findOne(id: string) {
     const findUser = await this.userModel.findOne({ _id: id }).select(EXCLUDE_FIELDS).exec();
-    return findUser;
+    return { findUser };
   }
 
   async findByUsername(username: string) {
     const findUser = await this.userModel.findOne({ username }).select(EXCLUDE_FIELDS).exec();
-    return findUser;
+    return { findUser };
   }
   async update(id: string, updateUserDto: UpdateUserDto) {
     const findUser = await this.userModel.findOne({ _id: id }).exec();
