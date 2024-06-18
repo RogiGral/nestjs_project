@@ -9,7 +9,6 @@ import { JwtService } from '@nestjs/jwt';
   imports: [
     MongooseModule.forFeature([{ name: UserEntity.name, schema: UserSchema }]),
     MongooseModule.forFeature([{ name: InvoiceEntity.name, schema: InvoiceSchema }]),
-
   ],
   controllers: [UsersController],
   providers: [UsersService, JwtService],
