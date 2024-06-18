@@ -28,7 +28,6 @@ export class AuthController {
   @Post('refreshToken')
   @UseGuards(RefreshJwtAuthGuard)
   async refreshToken(@Req() req) {
-    console.log(req);
     const { accessToken } = await this.authService.refreshToken(req.user);
     if (!accessToken) {
       throw new HttpException('Invalid credentials', 401);

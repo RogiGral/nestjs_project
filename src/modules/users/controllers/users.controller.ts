@@ -17,10 +17,11 @@ import {
 } from '@nestjs/common';
 import mongoose from 'mongoose';
 import { UsersService } from '../services';
-import { UserDto } from '../dto';
+import { CreateUserDto, RegisterUserDto, UpdateUserDto } from '../dto';
 import { ClaimsGuard, JwtAuthGuard } from '../../../common/guards';
 import { Claims } from '../../../common/decorators';
 import { Claims as RequiredClaims } from '../../../common/consts/claims';
+
 
 @Controller('users')
 export class UsersController {
@@ -29,7 +30,7 @@ export class UsersController {
   @Post("/create")
   @UseGuards(JwtAuthGuard, ClaimsGuard)
   @Claims(RequiredClaims.CAN_ACCESS_USER_CREATE)
-  async create(@Body() createUserDto: UserDto) {
+  async create(@Body() createUserDto: CreateUserDto) {
     const findUser = await this.usersService.findByUsername(createUserDto.username);
     if (findUser) {
       throw new HttpException(`User with username ${createUserDto.username} already exists`, HttpStatus.FOUND);
@@ -37,16 +38,19 @@ export class UsersController {
     if (createUserDto.claims && !this.validateClaims(createUserDto.claims)) {
       throw new HttpException("Invalid claims", HttpStatus.BAD_REQUEST)
     }
-    return this.usersService.create(createUserDto);
+    await this.usersService.create(createUserDto);
+    return { message: "User has been created", statusCode: HttpStatus.CREATED }
   }
 
   @Post("/register")
-  async register(@Body() createUserDto: UserDto) {
-    const findUser = await this.usersService.findByUsername(createUserDto.username);
+  async register(@Body() registerUserDto: RegisterUserDto) {
+    const findUser = await this.usersService.findByUsername(registerUserDto.username);
     if (findUser) {
-      throw new HttpException(`User with username ${createUserDto.username} already exists`, HttpStatus.FOUND);
+      throw new HttpException(`User with username ${registerUserDto.username} already exists`, HttpStatus.FOUND);
     }
-    return this.usersService.create(createUserDto);
+    await this.usersService.create(registerUserDto);
+
+    return { message: "User has been registered", statusCode: HttpStatus.CREATED }
   }
 
   @Get()
@@ -92,12 +96,14 @@ export class UsersController {
   @UsePipes(new ValidationPipe())
   @UseGuards(JwtAuthGuard, ClaimsGuard)
   @Claims(RequiredClaims.CAN_ACCESS_USER_UPDATE)
-  async update(@Param('id') id: string, @Body() updateUserDto: UserDto) {
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     const isValid = mongoose.Types.ObjectId.isValid(id);
     if (!isValid) {
       throw new HttpException('Invalid ID', HttpStatus.BAD_REQUEST);
     }
-    return await this.usersService.update(id, updateUserDto);
+    await this.usersService.update(id, updateUserDto);
+    return { message: "User has been updated", statusCode: HttpStatus.CREATED }
+
   }
 
   @Delete(':id')
@@ -130,7 +136,8 @@ export class UsersController {
 
     findUser.claims = [...new Set([...findUser.claims, ...claims])];
 
-    return await this.usersService.assignClaims(findUser);
+    await this.usersService.assignClaims(findUser);
+    return { message: `User claims: ${claims} has been updated`, statusCode: HttpStatus.CREATED }
   }
 
   @Patch(':id/claims/remove')
@@ -149,7 +156,9 @@ export class UsersController {
 
     findUser.claims = findUser.claims.filter(claim => !claims.includes(claim));
 
-    return await this.usersService.assignClaims(findUser);
+    await this.usersService.assignClaims(findUser);
+
+    return { message: `User claims: ${claims} has been removed`, statusCode: HttpStatus.CREATED }
   }
 
 
