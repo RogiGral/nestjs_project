@@ -1,10 +1,9 @@
-import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { UserEntity } from '../../../entitities';
+import { InvoiceEntity, UserEntity } from '../../../entitities';
 import { CreateUserDto, RegisterUserDto, UpdateUserDto, UserDto } from '../dto';
 import { GeneratePassword } from '../../../common/utilities';
-import { Claims as RequiredClaims } from '../../../common/consts/claims';
 export const EXCLUDE_FIELDS = '-__v -password';
 
 @Injectable()
@@ -13,6 +12,7 @@ export class UsersService {
 
   constructor(
     @InjectModel(UserEntity.name) private userModel: Model<UserEntity>,
+    @InjectModel(InvoiceEntity.name) private invoiceModel: Model<InvoiceEntity>
   ) { }
 
   async create(createUserDto: CreateUserDto | RegisterUserDto) {
@@ -27,21 +27,31 @@ export class UsersService {
 
     createUserDto.password = saltedPassword;
     const newUser = new this.userModel(createUserDto);
-    await newUser.save();
+    const saveUSer = await newUser.save();
+    console.log(saveUSer)
   }
 
   async findAll() {
-    const findUsers = await this.userModel.find().select(EXCLUDE_FIELDS).exec();
+    const findUsers = await this.userModel.find().populate({
+      path: 'invoices',
+      model: this.invoiceModel,
+    }).select(EXCLUDE_FIELDS).exec();
     return { findUsers };
   }
 
   async findOne(id: string) {
-    const findUser = await this.userModel.findOne({ _id: id }).select(EXCLUDE_FIELDS).exec();
+    const findUser = await this.userModel.findOne({ _id: id }).populate({
+      path: 'invoices',
+      model: this.invoiceModel,
+    }).select(EXCLUDE_FIELDS).exec();
     return { findUser };
   }
 
   async findByUsername(username: string) {
-    const findUser = await this.userModel.findOne({ username }).select(EXCLUDE_FIELDS).exec();
+    const findUser = await this.userModel.findOne({ username }).populate({
+      path: 'invoices',
+      model: this.invoiceModel,
+    }).select(EXCLUDE_FIELDS).exec();
     return { findUser };
   }
   async update(id: string, updateUserDto: UpdateUserDto) {
@@ -68,9 +78,17 @@ export class UsersService {
     await findUser.save();
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<UserEntity> {
     const findUser = await this.userModel.findOneAndDelete({ _id: id }).select(EXCLUDE_FIELDS).exec();
     if (!findUser) throw new NotFoundException(`Failed to delete User! User with id '${id}' not found.`);
     return findUser;
+  }
+
+  async addInvoiceToUser(userId: string, invoiceId: string): Promise<UserEntity> {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      { $push: { invoices: invoiceId } },
+      { new: true, useFindAndModify: false }
+    ).select(EXCLUDE_FIELDS).exec();
   }
 }

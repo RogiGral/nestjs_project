@@ -4,30 +4,36 @@ import { UpdateInvoiceDto } from '../dto/update-invoice.dto';
 import { InvoiceEntity } from '../../../entitities';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { UsersService } from '../../../modules/users';
 
 @Injectable()
 export class InvoicesService {
 
   constructor(
-    @InjectModel(InvoiceEntity.name) private invoiceModel: Model<InvoiceEntity>
+    @InjectModel(InvoiceEntity.name) private invoiceModel: Model<InvoiceEntity>,
+    private readonly userService: UsersService
   ) { }
 
   async create(createInvoiceDto: CreateInvoiceDto) {
-    const createdInvoice = new this.invoiceModel(createInvoiceDto);
-    return await createdInvoice.save()
+    const createInvoice = new this.invoiceModel(createInvoiceDto);
+    const saveInvoice = await createInvoice.save()
+    await this.userService.addInvoiceToUser(createInvoiceDto.userId, saveInvoice._id.toString());
+    return saveInvoice
   }
 
   async findAll() {
     const findInvoices = await this.invoiceModel.find().exec()
+    if (!findInvoices) throw new NotFoundException(`Invoices not found!`);
     return { findInvoices };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const findInvoice = await this.invoiceModel.findOne({ _id: id }).exec();
+    if (!findInvoice) throw new NotFoundException(`Invoice with id '${id}' not found!`);
     return { findInvoice };
   }
 
-  async update(id: number, updateInvoiceDto: UpdateInvoiceDto) {
+  async update(id: string, updateInvoiceDto: UpdateInvoiceDto) {
     const findInvoice = await this.invoiceModel.findOne({ _id: id }).exec();
 
     if (!findInvoice) throw new NotFoundException(`Failed to update invoice! Invoice with id '${id}' not found.`);
@@ -36,7 +42,7 @@ export class InvoicesService {
     await findInvoice.save();
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const findInvoice = await this.invoiceModel.findOneAndDelete({ _id: id }).exec();
     if (!findInvoice) throw new NotFoundException(`Failed to delete Invoice! Invoice with id '${id}' not found.`);
     return findInvoice;

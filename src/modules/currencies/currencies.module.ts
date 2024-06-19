@@ -15,5 +15,6 @@ import { InvoiceEntity, InvoiceSchema, UserEntity, UserSchema } from '../../enti
   ],
   controllers: [CurrencyController],
   providers: [CurrencyService, JwtService, UsersService],
+  exports: [CurrencyService]
 })
 export class CurrencyModule { }
