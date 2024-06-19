@@ -1,20 +1,18 @@
-import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
-import { CurrencyService } from './services/currencies.service';
-import { CurrencyController } from './controllers';
+import { InvoicesController } from './controllers';
+import { InvoicesService } from './services';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users';
 import { MongooseModule } from '@nestjs/mongoose';
 import { InvoiceEntity, InvoiceSchema, UserEntity, UserSchema } from '../../entitities';
+import { UsersService } from '../users';
 
 @Module({
-  imports: [HttpModule,
+  imports: [
     MongooseModule.forFeature([{ name: UserEntity.name, schema: UserSchema }]),
     MongooseModule.forFeature([{ name: InvoiceEntity.name, schema: InvoiceSchema }]),
-
   ],
-  controllers: [CurrencyController],
-  providers: [CurrencyService, JwtService, UsersService],
-  exports: [CurrencyService]
+  controllers: [InvoicesController],
+  providers: [InvoicesService, UsersService, JwtService],
+  exports: [InvoicesService]
 })
-export class CurrencyModule { }
+export class InvoicesModule { }

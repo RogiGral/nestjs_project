@@ -5,6 +5,7 @@ import { AuthModule } from './modules/auth';
 import { CurrencyModule } from './modules/currencies';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './modules/users';
+import { InvoicesModule } from './modules/invoices/invoices.module';
 
 @Module({
   providers: [AppService],
@@ -17,6 +18,7 @@ import { UsersModule } from './modules/users';
       cache: true,
     }),
     UsersModule,
+    InvoicesModule,
   ],
 })
 export class AppModule { }

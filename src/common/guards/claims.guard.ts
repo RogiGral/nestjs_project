@@ -21,7 +21,7 @@ export class ClaimsGuard implements CanActivate {
         const token = request.headers.authorization.split(' ')[1];
         const decoded = this.jwtService.decode(token) as any;
 
-        const user = await this.userService.findOne(decoded._doc);
+        const { findUser: user } = await this.userService.findOne(decoded._doc);
 
         if (user.claims.includes(Claims.MANAGE)) return true;
 

@@ -9,18 +9,14 @@ import { LocalStrategy } from '../../common/strategies/local.strategy';
 import { JwtStrategy } from '../../common/strategies/jwt.strategy';
 import { RefreshJwtStrategy } from '../../common/strategies/refresh-jwt.strategy';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserEntity, UserSchema } from '../../entitities';
+import { InvoiceEntity, InvoiceSchema, UserEntity, UserSchema } from '../../entitities';
 
 @Global()
 @Module({
   imports: [
     PassportModule,
-    MongooseModule.forFeature([
-      {
-        name: UserEntity.name,
-        schema: UserSchema,
-      },
-    ]),
+    MongooseModule.forFeature([{ name: UserEntity.name, schema: UserSchema, },]),
+    MongooseModule.forFeature([{ name: InvoiceEntity.name, schema: InvoiceSchema }]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
