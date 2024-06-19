@@ -31,7 +31,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, ClaimsGuard)
   @Claims(RequiredClaims.CAN_ACCESS_USER_CREATE)
   async create(@Body() createUserDto: CreateUserDto) {
-    const findUser = await this.usersService.findByUsername(createUserDto.username);
+    const { findUser } = await this.usersService.findByUsername(createUserDto.username);
     if (findUser) {
       throw new HttpException(`User with username ${createUserDto.username} already exists`, HttpStatus.FOUND);
     }
@@ -44,7 +44,7 @@ export class UsersController {
 
   @Post("/register")
   async register(@Body() registerUserDto: RegisterUserDto) {
-    const findUser = await this.usersService.findByUsername(registerUserDto.username);
+    const { findUser } = await this.usersService.findByUsername(registerUserDto.username);
     if (findUser) {
       throw new HttpException(`User with username ${registerUserDto.username} already exists`, HttpStatus.FOUND);
     }
@@ -57,15 +57,15 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, ClaimsGuard)
   @Claims(RequiredClaims.CAN_ACCESS_USER_READ)
   async findAll() {
-    const users = await this.usersService.findAll();
-    return users;
+    const { findUsers } = await this.usersService.findAll();
+    return findUsers;
   }
 
   @Get('/status')
   @UseGuards(JwtAuthGuard, ClaimsGuard)
   @Claims(RequiredClaims.CAN_ACCESS_USER_STATUS)
   async checkStatus(@Req() request: any) {
-    const findUser = await this.usersService.findByUsername(request.user._doc.username);
+    const { findUser } = await this.usersService.findByUsername(request.user._doc.username);
     if (!findUser) throw new NotFoundException(`User with username '${request.user._doc.username}' not found!`);
     return findUser;
   }
@@ -78,7 +78,7 @@ export class UsersController {
     if (!isValid) {
       throw new HttpException('Invalid ID', HttpStatus.BAD_REQUEST);
     }
-    const findUser = await this.usersService.findOne(id);
+    const { findUser } = await this.usersService.findOne(id);
     if (!findUser) throw new NotFoundException(`User with id '${id}' not found!`);
     return findUser;
   }
@@ -87,7 +87,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, ClaimsGuard)
   @Claims(RequiredClaims.CAN_ACCESS_USER_READ)
   async findOneByUsername(@Param('username') username: string) {
-    const findUser = await this.usersService.findByUsername(username);
+    const { findUser } = await this.usersService.findByUsername(username);
     if (!findUser) throw new NotFoundException(`User with username '${username}' not found!`);
     return findUser;
   }
