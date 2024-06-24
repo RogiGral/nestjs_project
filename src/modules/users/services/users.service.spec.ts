@@ -1,62 +1,58 @@
-import { getModelToken } from "@nestjs/mongoose";
 import { TestingModule, Test } from "@nestjs/testing";
-import { UserEntity } from "../../../entitities";
+import { InvoiceEntity, UserEntity } from "../../../entitities";
 import { UsersService } from "./users.service";
-import { NotFoundException } from "@nestjs/common";
+import { GeneratePassword } from "../../../common/utilities";
+import { getModelToken } from "@nestjs/mongoose";
+import { RegisterUserDto } from "../dto";
+import { Model } from "mongoose";
 
-const mockUser = {
-    data: {
-        _id: "6666e8f64e299345e58c0f0e",
-        username: "igor",
-        email: "igor@gmail.com",
-    }
-}
-const mockAllUsers =
-    [{
-        _id: "6666e8f64e299345e58c0f0e",
-        username: "igor",
-        email: "igor@gmail.com",
-    }, {
-        _id: "7777e8f64e299345e58c0f0e",
-        username: "damian",
-        email: "damian@gmail.com",
-    }];
-const mockId = '6666e8f64e299345e58c0f0e';
-const mockIdError = 'error';
 export const EXCLUDE_FIELDS = '-__v -password';
 
-class MockedUserModel {
-    constructor(private _: any) { }
-    new = jest.fn().mockResolvedValue({});
-    static save = jest.fn().mockResolvedValue(mockUser);
-    static find = jest.fn().mockReturnThis();
-    static create = jest.fn().mockReturnValue(mockUser);
-    static findOneAndDelete = jest.fn().mockImplementation((id: string) => {
-        if (id == mockIdError) throw new NotFoundException();
-        return this;
-    });
-    static exec = jest.fn().mockReturnValue(mockUser);
-    static select = jest.fn().mockReturnThis();
-    static findOne = jest.fn().mockImplementation((id: string) => {
-        if (id == mockIdError) throw new NotFoundException();
-        return this;
-    });
-}
+const mockGeneratePassword = {
+    GeneratePassword: jest.fn()
+};
+const mockInvoiceModel = {
+    find: jest.fn(),
+    populate: jest.fn(),
+};
+
+const mockUserModel = {
+    new: jest.fn(),
+    constructor: jest.fn(),
+    find: jest.fn(),
+    findOne: jest.fn(),
+    findByIdAndUpdate: jest.fn(),
+    findOneAndDelete: jest.fn(),
+    populate: jest.fn(),
+    select: jest.fn(),
+    exec: jest.fn(),
+    save: jest.fn(),
+};
 
 describe('UsersService', () => {
     let service: UsersService;
+    let userModel: Model<UserEntity>;
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 UsersService,
                 {
                     provide: getModelToken(UserEntity.name),
-                    useValue: MockedUserModel,
+                    useValue: mockUserModel
+                },
+                {
+                    provide: GeneratePassword,
+                    useValue: mockGeneratePassword
+                },
+                {
+                    provide: getModelToken(InvoiceEntity.name),
+                    useValue: mockInvoiceModel
                 },
             ],
         }).compile();
 
         service = module.get<UsersService>(UsersService);
+        userModel = module.get<Model<UserEntity>>(getModelToken(UserEntity.name));
     });
 
 
@@ -68,10 +64,53 @@ describe('UsersService', () => {
         expect(service).toBeDefined();
     });
 
-    it('should find all users', async () => {
-        const expectedOutput = await service.findAll();
-        expect(MockedUserModel.find).toHaveBeenCalledTimes(1);
-        expect(expectedOutput).toEqual(mockAllUsers);
-    });
+    it('should find all users with populated invoices', async () => {
 
+        const invoices = [{
+            _id: "667155ffe5430f0786497b9a",
+            amount: 200,
+            date: "2024-04-04T00:00:00.000Z",
+            description: "TAX PAYMENT",
+            userId: "666ac614f09126b9126bdd92",
+            __v: 0
+        }, {
+            _id: "827444ffe5434f0785497a1a",
+            amount: 100,
+            date: "2024-04-04T00:00:00.000Z",
+            description: "TAX PAYMENT",
+            userId: "666ac614f09126b9126bdd92",
+            __v: 0
+        }];
+
+        const users = [{
+            _id: "666ac614f09126b9126bdd92",
+            username: "superadmin",
+            email: "superadmin@currencyservice.com",
+            claims: [
+                "MANAGE"
+            ],
+            invoices: invoices
+        },
+        {
+            _id: "666c2ea07c21c8599c077f97",
+            username: "user",
+            email: "user@gmail.com",
+            claims: [
+                "CAN_ACCESS_USER_STATUS",
+                "CAN_ACCESS_USER_READ"
+            ],
+            invoices: []
+        },
+        ];
+
+        mockUserModel.find.mockReturnValueOnce({
+            populate: jest.fn().mockReturnValue(Promise.resolve(users)),
+        } as any);
+
+        const result = await service.findAll();
+
+        expect(mockUserModel.find).toHaveBeenCalled();
+        expect(result).toEqual({ findUsers: users });
+
+    });
 });

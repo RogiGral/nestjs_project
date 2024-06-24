@@ -1,18 +1,29 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpService, HttpModule } from '@nestjs/axios';
-import { AxiosResponse } from 'axios';
-import { of } from 'rxjs';
+import { HttpService } from '@nestjs/axios';
 import { CurrencyService } from './currencies.service';
-import { CurrencyModule } from '../currencies.module';
+import { AxiosResponse } from 'axios';
+import { firstValueFrom, of } from 'rxjs';
+
 
 describe('CurrencyService', () => {
     let service: CurrencyService;
     let httpService: HttpService;
 
     beforeEach(async () => {
+
+        const httpServiceMock = {
+            get: jest.fn()
+        };
+
+
         const module: TestingModule = await Test.createTestingModule({
-            imports: [HttpModule, CurrencyModule],
-            providers: [CurrencyService],
+            providers: [
+                CurrencyService,
+                {
+                    provide: HttpService,
+                    useValue: httpServiceMock,
+                },
+            ],
         }).compile();
 
         service = module.get<CurrencyService>(CurrencyService);
@@ -30,7 +41,7 @@ describe('CurrencyService', () => {
     describe('convertCurrencyFromTo', () => {
         it('should call httpService.get with correct URL', async () => {
             const spy = jest.spyOn(httpService, 'get').mockReturnValue(of({} as AxiosResponse));
-            await service.convertCurrencyFromTo('USD', 'EUR', 100).toPromise();
+            await firstValueFrom(service.convertCurrencyFromTo('USD', 'EUR', 100))
             expect(spy).toHaveBeenCalledWith('https://api.frankfurter.app/latest?amount=100&from=USD&to=EUR');
         });
     });
@@ -38,7 +49,7 @@ describe('CurrencyService', () => {
     describe('getAllLatestCurrenciesFromTo', () => {
         it('should call httpService.get with correct URL', async () => {
             const spy = jest.spyOn(httpService, 'get').mockReturnValue(of({} as AxiosResponse));
-            await service.getAllLatestCurrenciesFromTo('USD', 'EUR').toPromise();
+            await firstValueFrom(service.getAllLatestCurrenciesFromTo('USD', 'EUR'))
             expect(spy).toHaveBeenCalledWith('https://api.frankfurter.app/latest?from=USD&to=EUR');
         });
     });
@@ -46,7 +57,7 @@ describe('CurrencyService', () => {
     describe('getAllHistoricalCurrenciesFromTo', () => {
         it('should call httpService.get with correct URL', async () => {
             const spy = jest.spyOn(httpService, 'get').mockReturnValue(of({} as AxiosResponse));
-            await service.getAllHistoricalCurrenciesFromTo('USD', 'EUR', '2024-01-01', '2024-01-02').toPromise();
+            await firstValueFrom(service.getAllHistoricalCurrenciesFromTo('USD', 'EUR', '2024-01-01', '2024-01-02'))
             expect(spy).toHaveBeenCalledWith('https://api.frankfurter.app/2024-01-01..2024-01-02?from=USD&to=EUR');
         });
     });
