@@ -56,9 +56,11 @@ export class UsersController {
   @Get()
   @UseGuards(JwtAuthGuard, ClaimsGuard)
   @Claims(RequiredClaims.CAN_ACCESS_USER_READ)
-  async findAll() {
-    const { findUsers } = await this.usersService.findAll();
-    return findUsers;
+  async findAll(@Req() request) {
+    const { nextInputCursor, prevInputCursor, limitNumber = 2 } = request.query;
+    const { findUsers, totalResults, prevCursor, nextCursor } = await this.usersService.findAll(nextInputCursor, prevInputCursor, limitNumber);
+
+    return { findUsers, status: HttpStatus.OK, nextCursor, prevCursor, totalResults };
   }
 
   @Get('/status')

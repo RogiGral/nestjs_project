@@ -32,7 +32,7 @@ export class AuthService {
     if (ValidatePassword(password, userFromDB.password)) {
       const { password, ...user } = userFromDB;
       return {
-        accessToken: this.jwtService.sign(user),
+        accessToken: this.jwtService.sign(user, { expiresIn: '8h' }),
         refreshToken: this.jwtService.sign(user, { expiresIn: '1d' }),
       };
     }

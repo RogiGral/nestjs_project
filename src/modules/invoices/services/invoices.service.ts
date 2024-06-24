@@ -21,10 +21,22 @@ export class InvoicesService {
     return saveInvoice
   }
 
-  async findAll() {
-    const findInvoices = await this.invoiceModel.find().exec()
+  async findAll(cursor: string, limit: number) {
+
+    let query: any = {};
+    if (cursor) {
+      query._id = { $gt: cursor };
+    }
+    const findInvoices = await this.invoiceModel.find(query).limit(Number(limit)).exec()
+
     if (!findInvoices) throw new NotFoundException(`Invoices not found!`);
-    return { findInvoices };
+
+
+
+    return {
+      totalResults: findInvoices.length,
+      findInvoices
+    };
   }
 
   async findOne(id: string) {

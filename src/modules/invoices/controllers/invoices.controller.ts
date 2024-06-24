@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, NotFoundException, Req, Res } from '@nestjs/common';
 import { InvoicesService } from '../services/invoices.service';
 import { CreateInvoiceDto } from '../dto/create-invoice.dto';
 import { UpdateInvoiceDto } from '../dto/update-invoice.dto';
 import { InvoiceEntity } from '../../../entitities';
 import mongoose from 'mongoose';
+import { HTML_INVOICE_TEMPLATE } from '../pdfTemplate';
+import puppeteer from 'puppeteer';
 
 @Controller('invoices')
 export class InvoicesController {
@@ -15,9 +17,14 @@ export class InvoicesController {
   }
 
   @Get()
-  async findAll() {
-    const { findInvoices } = await this.invoicesService.findAll();
-    return findInvoices;
+  async findAll(@Req() request) {
+    const { cursor, limit = 5 } = request.query;
+    const { findInvoices, totalResults } = await this.invoicesService.findAll(cursor, limit);
+
+    const prevCursor = cursor && findInvoices.length > 0 ? findInvoices[0]._id : null;
+    const nextCursor = findInvoices.length > 0 ? findInvoices[findInvoices.length - 1]._id : null;
+
+    return { findInvoices, status: HttpStatus.OK, nextCursor, prevCursor, totalResults };
   }
 
   @Get(':id')
@@ -27,7 +34,36 @@ export class InvoicesController {
       throw new HttpException('Invalid ID', HttpStatus.BAD_REQUEST);
     }
     const { findInvoice } = await this.invoicesService.findOne(id);
+
+
     return findInvoice;
+  }
+
+  @Get('generate/:id')
+  async geneateOne(@Param('id') id: string, @Res() res: any) {
+    const isValid = mongoose.Types.ObjectId.isValid(id);
+    if (!isValid) {
+      throw new HttpException('Invalid ID', HttpStatus.BAD_REQUEST);
+    }
+    const { findInvoice } = await this.invoicesService.findOne(id);
+
+    const htmlContent = HTML_INVOICE_TEMPLATE(findInvoice)
+
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+    const page = await browser.newPage();
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    const pdfBuffer = await page.pdf({ format: 'A4' });
+    await browser.close();
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename=invoice.pdf',
+      'Content-Length': pdfBuffer.length,
+    });
+
+    res.send(pdfBuffer);
   }
 
   @Patch(':id')
@@ -38,7 +74,6 @@ export class InvoicesController {
     }
     await this.invoicesService.update(id, updateInvoiceDto);
     return { message: "Invoice has been updated", statusCode: HttpStatus.CREATED }
-
 
   }
 
@@ -51,3 +86,4 @@ export class InvoicesController {
     return this.invoicesService.remove(id);
   }
 }
+
