@@ -6,6 +6,7 @@ import { InvoiceEntity } from '../../../entitities';
 import mongoose from 'mongoose';
 import { HTML_INVOICE_TEMPLATE } from '../pdfTemplate';
 import puppeteer from 'puppeteer';
+import { Response } from 'express';
 
 @Controller('invoices')
 export class InvoicesController {
@@ -40,7 +41,7 @@ export class InvoicesController {
   }
 
   @Get('generate/:id')
-  async geneateOne(@Param('id') id: string, @Res() res: any) {
+  async geneateOne(@Param('id') id: string, @Res() res: Response) {
     const isValid = mongoose.Types.ObjectId.isValid(id);
     if (!isValid) {
       throw new HttpException('Invalid ID', HttpStatus.BAD_REQUEST);
@@ -52,6 +53,7 @@ export class InvoicesController {
     const browser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
+
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
     const pdfBuffer = await page.pdf({ format: 'A4' });
@@ -59,7 +61,7 @@ export class InvoicesController {
 
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': 'attachment; filename=invoice.pdf',
+      'Content-Disposition': `attachment; filename=${findInvoice.userId}.pdf`,
       'Content-Length': pdfBuffer.length,
     });
 
