@@ -17,13 +17,15 @@ export class InvoicesController {
     return this.invoicesService.create(createInvoiceDto);
   }
 
+  @Post('createMany/:numberOfInvoices')
+  createMany(@Param('numberOfInvoices') numberOfInvoices: number): Promise<any> {
+    return this.invoicesService.createMany(numberOfInvoices);
+  }
+
   @Get()
   async findAll(@Req() request) {
-    const { cursor, limit = 5 } = request.query;
-    const { findInvoices, totalResults } = await this.invoicesService.findAll(cursor, limit);
-
-    const prevCursor = cursor && findInvoices.length > 0 ? findInvoices[0]._id : null;
-    const nextCursor = findInvoices.length > 0 ? findInvoices[findInvoices.length - 1]._id : null;
+    const { nextInputCursor, prevInputCursor, limitNumber = 2, searchParams } = request.query;
+    const { findInvoices, totalResults, prevCursor, nextCursor } = await this.invoicesService.findAll(nextInputCursor, prevInputCursor, limitNumber, searchParams);
 
     return { findInvoices, status: HttpStatus.OK, nextCursor, prevCursor, totalResults };
   }
@@ -36,12 +38,11 @@ export class InvoicesController {
     }
     const { findInvoice } = await this.invoicesService.findOne(id);
 
-
     return findInvoice;
   }
 
   @Get('generate/:id')
-  async geneateOne(@Param('id') id: string, @Res() res: Response) {
+  async generateOne(@Param('id') id: string, @Res() res: Response) {
     const isValid = mongoose.Types.ObjectId.isValid(id);
     if (!isValid) {
       throw new HttpException('Invalid ID', HttpStatus.BAD_REQUEST);
@@ -86,6 +87,10 @@ export class InvoicesController {
       throw new HttpException('Invalid ID', HttpStatus.BAD_REQUEST);
     }
     return this.invoicesService.remove(id);
+  }
+  @Delete('delete/allInvoices')
+  removeAll() {
+    return this.invoicesService.removeAllInvoices();
   }
 }
 

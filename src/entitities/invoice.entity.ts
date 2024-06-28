@@ -14,6 +14,12 @@ export class InvoiceEntity extends Document {
 
   @Prop({ type: String, required: true })
   userId: string;
+
+  @Prop({ type: String, required: true })
+  companyName: string;
+
+  @Prop({ required: true, unique: true })
+  invoiceNumber: number;
 }
 
 export const InvoiceSchema = SchemaFactory.createForClass(InvoiceEntity);

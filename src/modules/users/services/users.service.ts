@@ -76,7 +76,7 @@ export class UsersService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<any> {
     const findUser = await this.userModel.findOne({ _id: id }, { password: 0 }).populate({
       path: 'invoices',
       model: this.invoiceModel,

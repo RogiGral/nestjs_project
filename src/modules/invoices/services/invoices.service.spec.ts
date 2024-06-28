@@ -1,151 +1,256 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { InvoicesService } from './invoices.service';
-import { InvoiceEntity, InvoiceSchema, UserEntity, UserSchema } from '../../../entitities';
-import { getModelToken } from '@nestjs/mongoose';
-import { UsersService } from '../../../modules/users';
-import { Model } from 'mongoose';
-import { NotFoundException } from '@nestjs/common';
-import { CreateInvoiceDto, UpdateInvoiceDto } from '../dto';
 
-export const INVOICE_ID = '667155ffe5430f0786497b9a';
-export const mockInvoiceRecord = {
-  _id: INVOICE_ID,
-  amount: 200,
-  date: new Date("2024-04-04T00:00:00.000Z"),
-  description: "TAX PAYMENT",
-  userId: "666ac614f09126b9126bdd92"
-};
+import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
+import { getModelToken } from '@nestjs/mongoose';
+import { InvoicesService } from './invoices.service';
+import { UsersService } from '../../../modules/users';
+import { InvoiceEntity, Counter } from '../../../entitities';
+import { Model } from 'mongoose';
+import { CreateInvoiceDto } from '../dto/create-invoice.dto';
+import { UpdateInvoiceDto } from '../dto/update-invoice.dto';
 
 describe('InvoicesService', () => {
   let invoiceService: InvoicesService;
   let invoiceModel: Model<InvoiceEntity>;
+  let counterModel: Model<Counter>;
   let userService: UsersService;
 
   beforeEach(async () => {
-
-    const mockInvoiceModel = {
-      new: jest.fn(),
-      constructor: jest.fn(),
-      find: jest.fn(),
-      findOne: jest.fn(),
-      findOneAndDelete: jest.fn(),
-      save: jest.fn(),
-      exec: jest.fn(),
-    };
-
-    const mockUserService = {
-      addInvoiceToUser: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InvoicesService,
-        {
-          provide: UsersService,
-          useValue: mockUserService,
-        },
+        UsersService,
         {
           provide: getModelToken(InvoiceEntity.name),
-          useValue: mockInvoiceModel,
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            findOneAndDelete: jest.fn(),
+            save: jest.fn(),
+          },
+        },
+        {
+          provide: getModelToken(Counter.name),
+          useValue: {
+            findOneAndUpdate: jest.fn(),
+          },
         },
       ],
     }).compile();
+
     invoiceService = module.get<InvoicesService>(InvoicesService);
     invoiceModel = module.get<Model<InvoiceEntity>>(getModelToken(InvoiceEntity.name));
+    counterModel = module.get<Model<Counter>>(getModelToken(Counter.name));
     userService = module.get<UsersService>(UsersService);
   });
 
-  it('should be defined', () => {
-    expect(invoiceService).toBeDefined();
+  describe('create', () => {
+    it('should create and save an invoice and add it to the user', async () => {
+      const createInvoiceDto: CreateInvoiceDto = {
+        amount: 0,
+        date: undefined,
+        description: '',
+        userId: '',
+      };
+
+      const invoiceNumber = 1; // Provide the expected invoice number
+
+      const saveInvoice = {
+        amount: 0,
+        date: undefined,
+        description: '',
+        userId: '',
+        companyName: '',
+        _id: "1234567890"
+      };
+
+      jest.spyOn(invoiceService, 'getNextSequenceValue').mockResolvedValue(invoiceNumber);
+      jest.spyOn(invoiceModel.prototype, 'save').mockResolvedValue(saveInvoice);
+      jest.spyOn(userService, 'addInvoiceToUser').mockResolvedValue(undefined);
+
+      const result = await invoiceService.create(createInvoiceDto);
+
+      expect(invoiceService.getNextSequenceValue).toHaveBeenCalledWith('invoiceNumber');
+      expect(invoiceModel.prototype.save).toHaveBeenCalled();
+      expect(userService.addInvoiceToUser).toHaveBeenCalledWith(createInvoiceDto.userId, saveInvoice._id.toString());
+      expect(result).toEqual(saveInvoice);
+    });
   });
 
   describe('findAll', () => {
     it('should return an array of invoices', async () => {
+      const cursor = '123';
+      const limit = 10;
+
+      const findInvoices = [
+        {
+          amount: 0,
+          date: undefined,
+          description: '',
+          userId: '',
+          companyName: '',
+          _id: "1234567890"
+        }
+      ];
+
       jest.spyOn(invoiceModel, 'find').mockReturnValue({
-        exec: jest.fn().mockResolvedValue([mockInvoiceRecord]),
+        limit: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(findInvoices),
+        }),
       } as any);
 
-      const result = await invoiceService.findAll();
+      const result = await invoiceService.findAll(cursor, limit);
 
-      expect(invoiceModel.find).toHaveBeenCalled();
-      expect(result).toEqual({ findInvoices: [mockInvoiceRecord] });
+      expect(invoiceModel.find).toHaveBeenCalledWith({ _id: { $gt: cursor } });
+      expect(result).toEqual({
+        totalResults: findInvoices.length,
+        findInvoices,
+      });
+    });
+
+    it('should throw a NotFoundException if no invoices are found', async () => {
+      const cursor = '123';
+      const limit = 10;
+
+      jest.spyOn(invoiceModel, 'find').mockReturnValue({
+        limit: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(null),
+        }),
+      } as any);
+
+      await expect(invoiceService.findAll(cursor, limit)).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('findOne', () => {
     it('should return a single invoice', async () => {
+      const id = '123';
+
+      const findInvoice = {
+        amount: 0,
+        date: undefined,
+        description: '',
+        userId: '',
+        companyName: '',
+        _id: "1234567890"
+      };
+
       jest.spyOn(invoiceModel, 'findOne').mockReturnValue({
-        exec: jest.fn().mockResolvedValue(mockInvoiceRecord),
+        exec: jest.fn().mockResolvedValue(findInvoice),
       } as any);
 
-      const result = await invoiceService.findOne(INVOICE_ID);
+      const result = await invoiceService.findOne(id);
 
-      expect(invoiceModel.findOne).toHaveBeenCalledWith({ _id: INVOICE_ID });
-      expect(result).toEqual({ findInvoice: mockInvoiceRecord });
+      expect(invoiceModel.findOne).toHaveBeenCalledWith({ _id: id });
+      expect(result).toEqual({ findInvoice });
     });
 
     it('should throw a NotFoundException if invoice not found', async () => {
+      const id = '123';
+
       jest.spyOn(invoiceModel, 'findOne').mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       } as any);
 
-      await expect(invoiceService.findOne(INVOICE_ID)).rejects.toThrow(NotFoundException);
+      await expect(invoiceService.findOne(id)).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('update', () => {
+    it('should update an existing invoice', async () => {
+      const id = '123';
+      const updateInvoiceDto: UpdateInvoiceDto = {
+        // Provide the necessary properties for updateInvoiceDto
+      };
+
+      const findInvoice = {
+        amount: 0,
+        date: undefined,
+        description: '',
+        userId: '',
+        companyName: '',
+        _id: "1234567890"
+      };
+
+      jest.spyOn(invoiceModel, 'findOne').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(findInvoice),
+        save: jest.fn(),
+      } as any);
+
+      await invoiceService.update(id, updateInvoiceDto);
+
+      expect(invoiceModel.findOne).toHaveBeenCalledWith({ _id: id });
+      expect(findInvoice).toMatchObject(updateInvoiceDto);
+    });
+
     it('should throw a NotFoundException if invoice not found', async () => {
+      const id = '123';
+      const updateInvoiceDto: UpdateInvoiceDto = {
+        amount: 0,
+        date: undefined,
+        description: '',
+        userId: ''
+      };
+
       jest.spyOn(invoiceModel, 'findOne').mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       } as any);
 
-      await expect(invoiceService.update(INVOICE_ID, {} as UpdateInvoiceDto)).rejects.toThrow(NotFoundException);
+      await expect(invoiceService.update(id, updateInvoiceDto)).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('remove', () => {
     it('should remove an existing invoice', async () => {
+      const id = '123';
+
+      const findInvoice = {
+        amount: 0,
+        date: undefined,
+        description: '',
+        userId: '',
+        companyName: '',
+        _id: "123"
+      };
+
       jest.spyOn(invoiceModel, 'findOneAndDelete').mockReturnValue({
-        exec: jest.fn().mockResolvedValue(mockInvoiceRecord),
+        exec: jest.fn().mockResolvedValue(findInvoice),
       } as any);
 
-      const result = await invoiceService.remove(INVOICE_ID);
+      const result = await invoiceService.remove(id);
 
-      expect(invoiceModel.findOneAndDelete).toHaveBeenCalledWith({ _id: INVOICE_ID });
-      expect(result).toEqual(mockInvoiceRecord);
+      expect(invoiceModel.findOneAndDelete).toHaveBeenCalledWith({ _id: id });
+      expect(result).toEqual(findInvoice);
     });
 
     it('should throw a NotFoundException if invoice not found', async () => {
+      const id = '123';
+
       jest.spyOn(invoiceModel, 'findOneAndDelete').mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       } as any);
 
-      await expect(invoiceService.remove(INVOICE_ID)).rejects.toThrow(NotFoundException);
+      await expect(invoiceService.remove(id)).rejects.toThrow(NotFoundException);
     });
   });
 
-  // describe('create', () => {
-  //   it('should create and save an invoice and add it to the user', async () => {
-  //     const createInvoiceDto: CreateInvoiceDto = mockInvoiceRecord
-  //     const savedInvoice = { _id: 'invoiceId', ...createInvoiceDto };
+  describe('getNextSequenceValue', () => {
+    it('should return the next sequence value', async () => {
+      const sequenceName = 'invoiceNumber';
+      const counter = {
+        sequenceValue: 1,
+      };
 
-  //     const mockSave = jest.fn().mockResolvedValue(savedInvoice);
-  //     const mockCreate = jest.fn().mockImplementation(() => ({
-  //       save: mockSave,
-  //     }));
+      jest.spyOn(counterModel, 'findOneAndUpdate').mockResolvedValue(counter);
 
-  //     (invoiceModel as any).mockImplementation(mockCreate);
+      const result = await invoiceService.getNextSequenceValue(sequenceName);
 
-  //     jest.spyOn(userService, 'addInvoiceToUser').mockResolvedValue(undefined);
-
-  //     const result = await invoiceService.create(createInvoiceDto);
-
-  //     expect(mockCreate).toHaveBeenCalledWith(createInvoiceDto);
-  //     expect(mockSave).toHaveBeenCalled();
-  //     expect(userService.addInvoiceToUser).toHaveBeenCalledWith(createInvoiceDto.userId, savedInvoice._id.toString());
-  //     expect(result).toEqual(savedInvoice);
-
-  //   });
-  // });
-
+      expect(counterModel.findOneAndUpdate).toHaveBeenCalledWith(
+        { key: sequenceName },
+        { $inc: { sequenceValue: 1 } },
+        { new: true, upsert: true }
+      );
+      expect(result).toEqual(counter.sequenceValue);
+    });
+  });
 });
