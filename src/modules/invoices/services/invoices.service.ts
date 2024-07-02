@@ -5,6 +5,7 @@ import { Counter, InvoiceEntity } from '../../../entitities';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UsersService } from '../../../modules/users';
+import { SearchFilters } from '../../../common/consts';
 
 @Injectable()
 export class InvoicesService {
@@ -84,6 +85,12 @@ export class InvoicesService {
 
     for (const param of params) {
       const [key, value] = param.split('=');
+
+      const baseKey = key.split(/[<>]/)[0];
+      if (!SearchFilters.includes(baseKey)) {
+        throw new Error(`Invalid search parameter: ${key}`);
+      }
+
       const parsedValue = this.parseValue(value);
       searchParamsObj[key] = parsedValue;
     }
