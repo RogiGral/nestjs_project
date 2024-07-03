@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { InvoiceEntity, UserEntity } from '../../../entitities';
 import { CreateUserDto, RegisterUserDto, UpdateUserDto, UserDto } from '../dto';
 import { GeneratePassword } from '../../../common/utilities';
-import { find } from 'rxjs';
+
 export const EXCLUDE_FIELDS = '-__v -password';
 
 @Injectable()
@@ -96,12 +96,14 @@ export class UsersService {
 
     if (!findUser) throw new NotFoundException(`Failed to update user! User with id '${id}' not found.`);
 
-    const saltedPassword = await GeneratePassword(
-      updateUserDto.password,
-      this.saltRounds,
-    );
+    if (updateUserDto.password) {
+      const saltedPassword = await GeneratePassword(
+        updateUserDto.password,
+        this.saltRounds,
+      );
+      updateUserDto.password = saltedPassword;
+    }
 
-    updateUserDto.password = saltedPassword;
     Object.assign(findUser, updateUserDto);
     await findUser.save();
   }

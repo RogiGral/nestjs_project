@@ -18,12 +18,13 @@ export class InvoicesService {
 
   async create(createInvoiceDto: CreateInvoiceDto) {
     const invoiceNumber = await this.getNextSequenceValue('invoiceNumber');
-    const user = await this.userService.findOne(createInvoiceDto.userId)
+    const user = await this.userService.findOne(createInvoiceDto.userId);
     const createInvoice = new this.invoiceModel({
       ...createInvoiceDto,
-      companyName: user.companyName,
+      companyName: user.findUser.companyName,
       invoiceNumber
     });
+
     const saveInvoice = await createInvoice.save()
     await this.userService.addInvoiceToUser(createInvoiceDto.userId, saveInvoice._id.toString());
     return saveInvoice
@@ -148,19 +149,6 @@ export class InvoicesService {
     return findInvoice;
   }
 
-  async removeAllInvoices(): Promise<any> {
-    const deleteResult = await this.invoiceModel.deleteMany({});
-    if (!deleteResult) throw new NotFoundException(`Failed to delete invoices!`);
-
-    await this.counterModel.findOneAndUpdate(
-      { key: 'invoiceNumber' },
-      { sequenceValue: 0 },
-      { new: true, upsert: true }
-    );
-
-    return deleteResult;
-  }
-
   async getNextSequenceValue(sequenceName: string): Promise<number> {
     const counter = await this.counterModel.findOneAndUpdate(
       { key: sequenceName },
@@ -170,61 +158,74 @@ export class InvoicesService {
     return counter.sequenceValue;
   }
 
-  async getSequenceValuesBatch(sequenceName: string, count: number): Promise<number[]> {
-    const sequencePromises = Array.from({ length: count }, () => this.getNextSequenceValue(sequenceName));
-    return Promise.all(sequencePromises);
-  }
+  // async removeAllInvoices(): Promise<any> {
+  //   const deleteResult = await this.invoiceModel.deleteMany({});
+  //   if (!deleteResult) throw new NotFoundException(`Failed to delete invoices!`);
 
-  async createMany(numberOfInvoices: number) {
-    const invoices = [];
-    const batchSize = 1000;
-    const userId = [
-      '667417d2ae277ff0ee35bdae',
-      '667417d9ae277ff0ee35bdb1',
-      '667417e0ae277ff0ee35bdb4',
-      '667417e8ae277ff0ee35bdb7',
-      '667c0375518a3787d4a56b52',
-      '667c0384518a3787d4a56b58',
-      '667c038c518a3787d4a56b5b',
-      '667c0394518a3787d4a56b5e',
-      '667c039c518a3787d4a56b61',
-      '667c03a3518a3787d4a56b64'
-    ];
-    const companyName = 'TEST_COMPANY';
-    const baseDate = new Date();
+  //   await this.counterModel.findOneAndUpdate(
+  //     { key: 'invoiceNumber' },
+  //     { sequenceValue: 0 },
+  //     { new: true, upsert: true }
+  //   );
 
-    for (let batchStart = 0; batchStart < numberOfInvoices; batchStart += batchSize) {
-      const batchEnd = Math.min(batchStart + batchSize, numberOfInvoices);
-      const batchInvoices = [];
-      const sequenceValues = await this.getSequenceValuesBatch('invoiceNumber', batchEnd - batchStart);
+  //   return deleteResult;
+  // }
 
-      for (let i = batchStart; i < batchEnd; i++) {
-        batchInvoices.push({
-          amount: 100 + i,
-          date: new Date(baseDate.getTime() + i * 86400000),
-          description: `Test Invoice ${i}`,
-          userId: userId[i % 10],
-          companyName: companyName,
-          invoiceNumber: sequenceValues[i - batchStart],
-        });
-      }
 
-      try {
-        await this.invoiceModel.insertMany(batchInvoices);
-        console.log(`Invoices ${batchStart} to ${batchEnd - 1} added successfully`);
-      } catch (error) {
-        console.error(`Error adding invoices ${batchStart} to ${batchEnd - 1}:`, error);
-        throw error;
-      }
+  // async getSequenceValuesBatch(sequenceName: string, count: number): Promise<number[]> {
+  //   const sequencePromises = Array.from({ length: count }, () => this.getNextSequenceValue(sequenceName));
+  //   return Promise.all(sequencePromises);
+  // }
 
-    }
+  // async createMany(numberOfInvoices: number) {
+  //   const batchSize = 1000;
+  //   const userId = [
+  //     '667417d2ae277ff0ee35bdae',
+  //     '667417d9ae277ff0ee35bdb1',
+  //     '667417e0ae277ff0ee35bdb4',
+  //     '667417e8ae277ff0ee35bdb7',
+  //     '667c0375518a3787d4a56b52',
+  //     '667c0384518a3787d4a56b58',
+  //     '667c038c518a3787d4a56b5b',
+  //     '667c0394518a3787d4a56b5e',
+  //     '667c039c518a3787d4a56b61',
+  //     '667c03a3518a3787d4a56b64'
+  //   ];
+  //   const companyName = 'TEST_COMPANY';
+  //   const baseDate = new Date();
 
-    await this.counterModel.findOneAndUpdate(
-      { key: 'invoiceNumber' },
-      { sequenceValue: numberOfInvoices },
-      { new: true, upsert: true }
-    );
+  //   for (let batchStart = 0; batchStart < numberOfInvoices; batchStart += batchSize) {
+  //     const batchEnd = Math.min(batchStart + batchSize, numberOfInvoices);
+  //     const batchInvoices = [];
+  //     const sequenceValues = await this.getSequenceValuesBatch('invoiceNumber', batchEnd - batchStart);
 
-  }
+  //     for (let i = batchStart; i < batchEnd; i++) {
+  //       batchInvoices.push({
+  //         amount: 100 + i,
+  //         date: new Date(baseDate.getTime() + i * 86400000),
+  //         description: `Test Invoice ${i}`,
+  //         userId: userId[i % 10],
+  //         companyName: companyName,
+  //         invoiceNumber: sequenceValues[i - batchStart],
+  //       });
+  //     }
+
+  //     try {
+  //       await this.invoiceModel.insertMany(batchInvoices);
+  //       console.log(`Invoices ${batchStart} to ${batchEnd - 1} added successfully`);
+  //     } catch (error) {
+  //       console.error(`Error adding invoices ${batchStart} to ${batchEnd - 1}:`, error);
+  //       throw error;
+  //     }
+
+  //   }
+
+  //   await this.counterModel.findOneAndUpdate(
+  //     { key: 'invoiceNumber' },
+  //     { sequenceValue: numberOfInvoices },
+  //     { new: true, upsert: true }
+  //   );
+
+  // }
 
 }

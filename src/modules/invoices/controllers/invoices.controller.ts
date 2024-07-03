@@ -1,5 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, NotFoundException, Req, Res } from '@nestjs/common';
-import { InvoicesService } from '../services/invoices.service';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, Req, Res } from '@nestjs/common';
 import { CreateInvoiceDto } from '../dto/create-invoice.dto';
 import { UpdateInvoiceDto } from '../dto/update-invoice.dto';
 import { InvoiceEntity } from '../../../entitities';
@@ -7,20 +6,22 @@ import mongoose from 'mongoose';
 import { HTML_INVOICE_TEMPLATE } from '../pdfTemplate';
 import puppeteer from 'puppeteer';
 import { Response } from 'express';
+import { InvoicesService, MailerService } from '../services';
+import { UsersService } from '../../../modules/users';
 
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) { }
+  constructor(private readonly userService: UsersService, private readonly invoicesService: InvoicesService, private readonly mailerService: MailerService,) { }
 
   @Post()
   create(@Body() createInvoiceDto: CreateInvoiceDto): Promise<InvoiceEntity> {
     return this.invoicesService.create(createInvoiceDto);
   }
 
-  @Post('createMany/:numberOfInvoices')
-  createMany(@Param('numberOfInvoices') numberOfInvoices: number): Promise<any> {
-    return this.invoicesService.createMany(numberOfInvoices);
-  }
+  // @Post('createMany/:numberOfInvoices')
+  // createMany(@Param('numberOfInvoices') numberOfInvoices: number): Promise<any> {
+  //   return this.invoicesService.createMany(numberOfInvoices);
+  // }
 
   @Get()
   async findAll(@Req() request) {
@@ -61,12 +62,27 @@ export class InvoicesController {
     await browser.close();
 
     res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename=${findInvoice.userId}.pdf`,
-      'Content-Length': pdfBuffer.length,
+      'Content-Type': 'application/json',
     });
 
-    res.send(pdfBuffer);
+    const user = await this.userService.findOne(findInvoice.userId);
+
+    const timestamp = new Date().getTime();
+    const fileName = `invoice_${user.findUser.companyName}_${user.findUser.username}_${timestamp}.pdf`;
+
+    const mailerResponse = await this.mailerService.sendMail(
+      user.findUser.email,
+      'Your Invoice',
+      'Please find attached your invoice.',
+      [
+        {
+          filename: fileName,
+          content: pdfBuffer,
+        },
+      ],
+    );
+
+    res.send(mailerResponse);
   }
 
   @Patch(':id')
@@ -88,9 +104,9 @@ export class InvoicesController {
     }
     return this.invoicesService.remove(id);
   }
-  @Delete('delete/allInvoices')
-  removeAll() {
-    return this.invoicesService.removeAllInvoices();
-  }
+  // @Delete('delete/allInvoices')
+  // removeAll() {
+  //   return this.invoicesService.removeAllInvoices();
+  // }
 }
 
