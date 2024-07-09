@@ -10,16 +10,7 @@ import { InvoicesModule } from './modules/invoices/invoices.module';
 @Module({
   providers: [AppService],
   imports: [
-    MongooseModule.forRootAsync({
-      useFactory: () => ({
-        uri: 'mongodb://localhost/nest',
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        bufferCommands: false,
-        connectTimeoutMS: 30000,
-        socketTimeoutMS: 30000,
-      }),
-    }),
+    MongooseModule.forRoot('mongodb://localhost/nestjs'),
     AuthModule,
     CurrencyModule,
     ConfigModule.forRoot({
