@@ -1,6 +1,6 @@
 import { Injectable, RawBodyRequest } from '@nestjs/common';
 import Stripe from 'stripe';
-import { CancelPaymentDto, ConfirmPaymentDto, CreateCheckoutSessionDto, CreatePaymentDto } from '../dto';
+import { CreateCheckoutSessionDto } from '../dto';
 
 @Injectable()
 export class PaymentsService {
@@ -71,11 +71,6 @@ export class PaymentsService {
       const lineItemsList = await this.retriveCheckoutLineItems(checkoutId);
       console.log(lineItemsList);
     }
-  }
-
-
-  cancel(cancelPayment: CancelPaymentDto) {
-    return this.stripe.paymentIntents.cancel(cancelPayment.paymentIntentId);
   }
 
 }

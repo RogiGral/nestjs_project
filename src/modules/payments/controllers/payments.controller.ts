@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Req, Res, Headers, RawBodyRequest, Param } from "@nestjs/common";
-import { CreatePaymentDto, ConfirmPaymentDto, CreateCheckoutSessionDto } from "../dto";
+import { CreateCheckoutSessionDto } from "../dto";
 import { PaymentsService } from "../services";
 import { Request, Response } from 'express';
 
