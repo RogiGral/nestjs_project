@@ -82,7 +82,7 @@ export class InvoicesController {
       ],
     );
 
-    res.send(mailerResponse);
+    res.status(200).send();
   }
 
   @Patch(':id')
