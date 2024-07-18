@@ -16,7 +16,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/jest/bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "stripe:webhook": "stripe listen --forward-to localhost:3000/payments/webhook",
+    "docker:mailserver": "docker run -p 1080:1080 -p 1025:1025 maildev/maildev"
   },
   "dependencies": {
     "@nestjs/axios": "3.0.2",
