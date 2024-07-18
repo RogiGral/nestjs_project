@@ -18,7 +18,7 @@ export class UserEntity {
   password: string;
 
   @Prop({ required: true })
-  companyName: string
+  companyName: string;
 
   @Prop({ type: [String], required: true })
   claims: string[];

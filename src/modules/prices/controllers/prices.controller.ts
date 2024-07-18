@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { PricesService } from '../services';
 import { CreatePriceDto, UpdatePriceDto } from '../dto';
 
@@ -6,27 +14,28 @@ import { CreatePriceDto, UpdatePriceDto } from '../dto';
 export class PricesController {
   constructor(private readonly pricesService: PricesService) { }
 
-  @Post()
+  @Post('create')
   create(@Body() createPriceDto: CreatePriceDto) {
     return this.pricesService.create(createPriceDto);
   }
 
-  @Get()
-  findAll() {
-    return this.pricesService.findAll();
+  @Get('list')
+  async findAll() {
+    const result = await this.pricesService.findAll();
+    return result
   }
 
-  @Get(':id')
+  @Get('get/:id')
   findOne(@Param('id') id: string) {
     return this.pricesService.findOne(+id);
   }
 
-  @Patch(':id')
+  @Patch('update/:id')
   update(@Param('id') id: string, @Body() updatePriceDto: UpdatePriceDto) {
     return this.pricesService.update(+id, updatePriceDto);
   }
 
-  @Delete(':id')
+  @Delete('delete/:id')
   remove(@Param('id') id: string) {
     return this.pricesService.remove(+id);
   }

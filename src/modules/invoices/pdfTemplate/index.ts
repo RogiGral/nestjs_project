@@ -1,1 +1,1 @@
-export * from './invoicePdfTemplate'
+export * from './invoicePdfTemplate';

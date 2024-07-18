@@ -1,14 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePriceDto, UpdatePriceDto } from '../dto';
+import Stripe from 'stripe';
 
 @Injectable()
 export class PricesService {
-  create(createPriceDto: CreatePriceDto) {
-    return 'This action adds a new price';
+  private stripe;
+
+  constructor() {
+    this.stripe = new Stripe(process.env.STRIPE_API_KEY, {
+      apiVersion: '2024-06-20',
+    });
   }
 
-  findAll() {
-    return `This action returns all prices`;
+  async create(createPriceDto: CreatePriceDto) {
+    createPriceDto.unit_amount = createPriceDto.unit_amount * 100;
+    const price = await this.stripe.prices.create(createPriceDto);
+    return { priceId: price.id };
+  }
+
+  async findAll() {
+    const priceList = await this.stripe.prices.list();
+    return priceList;
   }
 
   findOne(id: number) {

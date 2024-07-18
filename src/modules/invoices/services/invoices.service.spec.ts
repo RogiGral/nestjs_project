@@ -1,4 +1,3 @@
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { getModelToken } from '@nestjs/mongoose';
@@ -39,7 +38,9 @@ describe('InvoicesService', () => {
     }).compile();
 
     invoiceService = module.get<InvoicesService>(InvoicesService);
-    invoiceModel = module.get<Model<InvoiceEntity>>(getModelToken(InvoiceEntity.name));
+    invoiceModel = module.get<Model<InvoiceEntity>>(
+      getModelToken(InvoiceEntity.name),
+    );
     counterModel = module.get<Model<Counter>>(getModelToken(Counter.name));
     userService = module.get<UsersService>(UsersService);
   });
@@ -61,18 +62,25 @@ describe('InvoicesService', () => {
         description: '',
         userId: '',
         companyName: '',
-        _id: "1234567890"
+        _id: '1234567890',
       };
 
-      jest.spyOn(invoiceService, 'getNextSequenceValue').mockResolvedValue(invoiceNumber);
+      jest
+        .spyOn(invoiceService, 'getNextSequenceValue')
+        .mockResolvedValue(invoiceNumber);
       jest.spyOn(invoiceModel.prototype, 'save').mockResolvedValue(saveInvoice);
       jest.spyOn(userService, 'addInvoiceToUser').mockResolvedValue(undefined);
 
       const result = await invoiceService.create(createInvoiceDto);
 
-      expect(invoiceService.getNextSequenceValue).toHaveBeenCalledWith('invoiceNumber');
+      expect(invoiceService.getNextSequenceValue).toHaveBeenCalledWith(
+        'invoiceNumber',
+      );
       expect(invoiceModel.prototype.save).toHaveBeenCalled();
-      expect(userService.addInvoiceToUser).toHaveBeenCalledWith(createInvoiceDto.userId, saveInvoice._id.toString());
+      expect(userService.addInvoiceToUser).toHaveBeenCalledWith(
+        createInvoiceDto.userId,
+        saveInvoice._id.toString(),
+      );
       expect(result).toEqual(saveInvoice);
     });
   });
@@ -89,8 +97,8 @@ describe('InvoicesService', () => {
           description: '',
           userId: '',
           companyName: '',
-          _id: "1234567890"
-        }
+          _id: '1234567890',
+        },
       ];
 
       jest.spyOn(invoiceModel, 'find').mockReturnValue({
@@ -118,7 +126,9 @@ describe('InvoicesService', () => {
         }),
       } as any);
 
-      await expect(invoiceService.findAll(cursor, limit)).rejects.toThrow(NotFoundException);
+      await expect(invoiceService.findAll(cursor, limit)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -132,7 +142,7 @@ describe('InvoicesService', () => {
         description: '',
         userId: '',
         companyName: '',
-        _id: "1234567890"
+        _id: '1234567890',
       };
 
       jest.spyOn(invoiceModel, 'findOne').mockReturnValue({
@@ -152,7 +162,9 @@ describe('InvoicesService', () => {
         exec: jest.fn().mockResolvedValue(null),
       } as any);
 
-      await expect(invoiceService.findOne(id)).rejects.toThrow(NotFoundException);
+      await expect(invoiceService.findOne(id)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -169,7 +181,7 @@ describe('InvoicesService', () => {
         description: '',
         userId: '',
         companyName: '',
-        _id: "1234567890"
+        _id: '1234567890',
       };
 
       jest.spyOn(invoiceModel, 'findOne').mockReturnValue({
@@ -189,14 +201,16 @@ describe('InvoicesService', () => {
         amount: 0,
         date: undefined,
         description: '',
-        userId: ''
+        userId: '',
       };
 
       jest.spyOn(invoiceModel, 'findOne').mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       } as any);
 
-      await expect(invoiceService.update(id, updateInvoiceDto)).rejects.toThrow(NotFoundException);
+      await expect(invoiceService.update(id, updateInvoiceDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -210,7 +224,7 @@ describe('InvoicesService', () => {
         description: '',
         userId: '',
         companyName: '',
-        _id: "123"
+        _id: '123',
       };
 
       jest.spyOn(invoiceModel, 'findOneAndDelete').mockReturnValue({
@@ -230,7 +244,9 @@ describe('InvoicesService', () => {
         exec: jest.fn().mockResolvedValue(null),
       } as any);
 
-      await expect(invoiceService.remove(id)).rejects.toThrow(NotFoundException);
+      await expect(invoiceService.remove(id)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -248,7 +264,7 @@ describe('InvoicesService', () => {
       expect(counterModel.findOneAndUpdate).toHaveBeenCalledWith(
         { key: sequenceName },
         { $inc: { sequenceValue: 1 } },
-        { new: true, upsert: true }
+        { new: true, upsert: true },
       );
       expect(result).toEqual(counter.sequenceValue);
     });

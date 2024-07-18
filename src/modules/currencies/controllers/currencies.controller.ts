@@ -6,9 +6,7 @@ import { Claims } from '../../../common/decorators';
 import { Claims as RequiredClaims } from '../../../common/consts/claims';
 @Controller('currency')
 export class CurrencyController {
-  constructor(
-    private readonly currencyService: CurrencyService
-  ) { }
+  constructor(private readonly currencyService: CurrencyService) {}
 
   @Get('/calculate')
   @UseGuards(JwtAuthGuard, ClaimsGuard)

@@ -6,4 +6,4 @@ import { PricesController } from './controllers';
   controllers: [PricesController],
   providers: [PricesService],
 })
-export class PricesModule { }
+export class PricesModule {}

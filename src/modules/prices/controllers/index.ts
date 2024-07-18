@@ -1,1 +1,1 @@
-export * from './prices.controller'
+export * from './prices.controller';

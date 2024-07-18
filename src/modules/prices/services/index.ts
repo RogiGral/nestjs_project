@@ -1,1 +1,1 @@
-export * from './prices.service'
+export * from './prices.service';

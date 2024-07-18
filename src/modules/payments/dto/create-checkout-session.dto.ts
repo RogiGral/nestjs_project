@@ -1,28 +1,30 @@
-import { IsString, IsNotEmpty, IsNumber } from "class-validator";
+import { Type } from 'class-transformer';
+import { IsString, IsNotEmpty, IsNumber, ValidateNested, IsArray, ArrayNotEmpty } from 'class-validator';
+
+
+class PriceDto {
+  @IsString()
+  @IsNotEmpty()
+  priceId: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  quantity: number;
+}
 
 export class CreateCheckoutSessionDto {
-    @IsString()
-    @IsNotEmpty()
-    currency: string;
 
-    @IsString()
-    @IsNotEmpty()
-    productName: string;
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => PriceDto)
+  priceList: PriceDto[];
 
-    @IsNumber()
-    @IsNotEmpty()
-    unitAmount: number;
+  @IsString()
+  @IsNotEmpty()
+  successUrl: string;
 
-    @IsNumber()
-    @IsNotEmpty()
-    quantity: number;
-
-    @IsString()
-    @IsNotEmpty()
-    successUrl: string;
-
-    @IsString()
-    @IsNotEmpty()
-    cancelUrl: string;
-
+  @IsString()
+  @IsNotEmpty()
+  cancelUrl: string;
 }

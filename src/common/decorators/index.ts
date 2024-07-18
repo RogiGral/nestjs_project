@@ -1,1 +1,1 @@
-export * from './claims.decorator'
+export * from './claims.decorator';

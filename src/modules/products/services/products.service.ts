@@ -5,8 +5,7 @@ import Stripe from 'stripe';
 
 @Injectable()
 export class ProductsService {
-
-  private stripe
+  private stripe;
 
   constructor() {
     this.stripe = new Stripe(process.env.STRIPE_API_KEY, {
@@ -30,11 +29,8 @@ export class ProductsService {
   }
 
   async update(id: string, updateProductDto: UpdateProductDto) {
-
-    const product = await this.stripe.products.update(
-      id, updateProductDto
-    );
-    return product.id
+    const product = await this.stripe.products.update(id, updateProductDto);
+    return product.id;
   }
 
   async remove(id: string) {
