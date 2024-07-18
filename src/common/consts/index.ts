@@ -1,2 +1,2 @@
-export * from './claims'
-export * from './searchFilters'
+export * from './claims';
+export * from './searchFilters';

@@ -1,2 +1,2 @@
-export * from './invoices.service'
-export * from './mailer.service'
+export * from './invoices.service';
+export * from './mailer.service';

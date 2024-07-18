@@ -8,7 +8,6 @@ export const HTML_INVOICE_TEMPLATE = (invoice: any): string => `
         }
 
         .invoice-box {
-
             padding: 30px;
             margin: 20px;
             border: 1px solid #eee;
@@ -35,6 +34,7 @@ export const HTML_INVOICE_TEMPLATE = (invoice: any): string => `
         }
 
         .invoice-box table tr.information table td {
+            float: right;
             padding-bottom: 40px;
         }
 
@@ -74,33 +74,54 @@ export const HTML_INVOICE_TEMPLATE = (invoice: any): string => `
                                 <h2>Invoice</h2>
                             </td>
                             <td>
-                                Date: ${invoice.date.toDateString()}
+                                ${new Date(invoice.date).toDateString()}
                             </td>
                         </tr>
                     </table>
                 </td>
             </tr>
             <tr class="information">
-                <td colspan="2">
+                <td colspan="6">
                     <table>
                         <tr>
                             <td>
-                                User ID: ${invoice.userId}
-                            </td>
-                            <td>
-                                Amount: $${invoice.amount}
+                                <strong>Consumer:</strong><br>
+                                ${invoice.consumer.name}<br>
+                                ${invoice.consumer.email}<br>
+                                ${invoice.company.tin_number ? 'NIP: ' + invoice.company.tin_number + '<br>' : ''}
+                                ${invoice.consumer.phoneNumber ? invoice.consumer.phoneNumber + '<br>' : ''}
+                                ${invoice.consumer.address.line1}, ${invoice.consumer.address.line2 ? invoice.consumer.address.line2 + ',' : ''} 
+                                ${invoice.consumer.address.state ? invoice.consumer.address.state + ',' : ''} <br>
+                                ${invoice.consumer.address.postal_code}, ${invoice.consumer.address.city}, ${invoice.consumer.address.country}
                             </td>
                         </tr>
                     </table>
                 </td>
             </tr>
+            </br>
             <tr class="heading">
-                <td>Description</td>
-                <td>Details</td>
+                <td>Item</td>
+                <td>Unit Price</td>
+                <td>Quantity</td>
+                <td>Total</td>
+                <td>Tax Value</td>
+                <td>Currency</td>
             </tr>
+            ${invoice.lineItems.map((item: any) => `
             <tr class="item">
-                <td>${invoice.description}</td>
-                <td>${invoice.amount}</td>
+                <td>${item.name}</td>
+                <td>$${item.amount_unit / 100}</td>
+                <td>${item.quantity}</td>
+                <td>$${item.amount_total / 100}</td>
+                <td>$${item.tax_value}</td>
+                <td>${item.currency.toUpperCase()}</td>
+            </tr>
+            `).join('')}
+            <tr class="total">
+                <td colspan="4"></td>
+                <td colspan="2">
+                    Final Amount: $${invoice.finalAmount / 100}
+                </td>
             </tr>
         </table>
     </div>

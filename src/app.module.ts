@@ -5,7 +5,11 @@ import { AuthModule } from './modules/auth';
 import { CurrencyModule } from './modules/currencies';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './modules/users';
-import { InvoicesModule } from './modules/invoices/invoices.module';
+import { InvoicesModule } from './modules/invoices';
+import { PaymentsModule } from './modules/payments';
+import { ProductsModule } from './modules/products';
+import { PricesModule } from './modules/prices';
+
 
 @Module({
   providers: [AppService],
@@ -19,6 +23,9 @@ import { InvoicesModule } from './modules/invoices/invoices.module';
     }),
     UsersModule,
     InvoicesModule,
+    PaymentsModule,
+    ProductsModule,
+    PricesModule,
   ],
 })
 export class AppModule { }

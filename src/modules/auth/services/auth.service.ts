@@ -1,12 +1,11 @@
-import { Injectable } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
-import { ValidatePassword } from "../../../common/utilities";
-import { UsersService } from "../../../modules/users";
-import { LoginPayloadDto } from "../dto";
-import { UserEntity } from "../../../entitities";
-import { Model } from "mongoose";
-import { InjectModel } from "@nestjs/mongoose";
-
+import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ValidatePassword } from '../../../common/utilities';
+import { UsersService } from '../../../modules/users';
+import { LoginPayloadDto } from '../dto';
+import { UserEntity } from '../../../entitities';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +13,7 @@ export class AuthService {
     private jwtService: JwtService,
     private usersService: UsersService,
     @InjectModel(UserEntity.name) private userModel: Model<UserEntity>,
-  ) { }
+  ) {}
 
   async validateUser({ username, password }: LoginPayloadDto): Promise<any> {
     const userFromDB = await this.userModel.findOne({ username });
