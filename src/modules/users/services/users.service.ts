@@ -8,17 +8,24 @@ import { Model } from 'mongoose';
 import { InvoiceEntity, UserEntity } from '../../../entitities';
 import { CreateUserDto, RegisterUserDto, UpdateUserDto, UserDto } from '../dto';
 import { GeneratePassword } from '../../../common/utilities';
+import Stripe from 'stripe';
 
 export const EXCLUDE_FIELDS = '-__v -password';
 
 @Injectable()
 export class UsersService {
-  saltRounds: number = 10;
+  private saltRounds: number = 10;
+  private stripe: Stripe;
 
   constructor(
     @InjectModel(UserEntity.name) private userModel: Model<UserEntity>,
     @InjectModel(InvoiceEntity.name) private invoiceModel: Model<InvoiceEntity>,
-  ) {}
+  ) {
+
+    this.stripe = new Stripe(process.env.STRIPE_API_KEY, {
+      apiVersion: '2024-06-20',
+    });
+  }
 
   async create(createUserDto: CreateUserDto | RegisterUserDto) {
     const saltedPassword = await GeneratePassword(
@@ -26,15 +33,47 @@ export class UsersService {
       this.saltRounds,
     );
 
+    let customer: any;
+
     if (createUserDto instanceof RegisterUserDto) {
       createUserDto.claims = ['CAN_ACCESS_USER_STATUS'];
     }
 
     createUserDto.password = saltedPassword;
+
+    //check if user exist
+    const userExist = await this.userModel.findOne({
+      name: createUserDto.name,
+    });
+
+    if (userExist) {
+      throw new ForbiddenException(
+        `Failed to create user! User with name '${createUserDto.name}' already exist.`,
+      );
+    }
+
+    //create stripe customer
+    try {
+      customer = await this.stripe.customers.create({
+        email: createUserDto.email,
+        name: createUserDto.name,
+        description: createUserDto.customer.description,
+        address: createUserDto.customer.address,
+      });
+    } catch (error) {
+      throw new ForbiddenException(
+        `Failed to create customer for user with email '${createUserDto.email}'`,
+      );
+    }
+
     const newUser = new this.userModel(createUserDto);
-    const saveUSer = await newUser.save();
-    console.log(saveUSer);
+
+    newUser.customer.id = customer.id;
+
+    const saveUser = await newUser.save();
+    console.log(saveUser);
   }
+
 
   async findAll(
     nextInputCursor: string,
