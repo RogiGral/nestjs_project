@@ -3,7 +3,11 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Address } from './address.entity';
 
 @Schema()
-export class Consumer {
+export class Customer {
+
+    @Prop({ required: true })
+    id: string;
+
     @Prop({ required: true })
     email: string;
 
@@ -19,4 +23,4 @@ export class Consumer {
 
 }
 
-export const ConsumerSchema = SchemaFactory.createForClass(Consumer);
+export const CustomerSchema = SchemaFactory.createForClass(Customer);

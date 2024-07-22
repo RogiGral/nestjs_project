@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsString, MinLength } from 'class-validator';
 import { Types, Document, Schema as MongooseSchema } from 'mongoose';
-import { Consumer } from './consumer.entity';
+import { Customer } from './customer.entity';
 
 @Schema()
 export class UserEntity {
@@ -9,6 +9,11 @@ export class UserEntity {
   @IsString()
   @MinLength(3)
   name: string;
+
+  @Prop({ unique: true, required: true })
+  @IsString()
+  @MinLength(3)
+  username: string;
 
   @Prop({ unique: true, required: true })
   @IsEmail()
@@ -28,7 +33,7 @@ export class UserEntity {
   invoices: Types.ObjectId[];
 
   @Prop({ type: MongooseSchema.Types.Mixed, required: true })
-  consumer: Consumer;
+  customer: Customer;
 }
 
 export const UserSchema = SchemaFactory.createForClass(UserEntity);

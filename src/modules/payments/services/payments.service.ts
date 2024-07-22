@@ -74,6 +74,10 @@ export class PaymentsService {
         sig,
         this.webhookSecret,
       );
+      console.log({
+        eventType: event.type,
+        eventObject: event.data.object,
+      })
     } catch (err) {
       console.log(`Webhook Error: ${err.message}`);
       return;

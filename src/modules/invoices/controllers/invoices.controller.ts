@@ -10,6 +10,7 @@ import {
   HttpStatus,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateInvoiceDto } from '../dto/create-invoice.dto';
 import { UpdateInvoiceDto } from '../dto/update-invoice.dto';
@@ -18,6 +19,7 @@ import mongoose from 'mongoose';
 import { Response } from 'express';
 import { InvoicesService, MailerService } from '../services';
 import { UsersService } from '../../../modules/users';
+import { JwtAuthGuard, ClaimsGuard } from 'src/common/guards';
 
 @Controller('invoices')
 export class InvoicesController {
@@ -28,11 +30,13 @@ export class InvoicesController {
   ) { }
 
   @Post()
+  @UseGuards(JwtAuthGuard, ClaimsGuard)
   create(@Body() createInvoiceDto: CreateInvoiceDto): Promise<InvoiceEntity> {
     return this.invoicesService.create(createInvoiceDto);
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, ClaimsGuard)
   async findAll(@Req() request) {
     const {
       nextInputCursor,
@@ -58,6 +62,7 @@ export class InvoicesController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, ClaimsGuard)
   async findOne(@Param('id') id: string) {
     const isValid = mongoose.Types.ObjectId.isValid(id);
     if (!isValid) {
@@ -69,6 +74,7 @@ export class InvoicesController {
   }
 
   @Get('generate/:id')
+  @UseGuards(JwtAuthGuard, ClaimsGuard)
   async generateOne(@Param('id') id: string, @Res() res: Response) {
     const isValid = mongoose.Types.ObjectId.isValid(id);
     if (!isValid) {
@@ -103,6 +109,7 @@ export class InvoicesController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, ClaimsGuard)
   async update(
     @Param('id') id: string,
     @Body() updateInvoiceDto: UpdateInvoiceDto,
@@ -119,6 +126,7 @@ export class InvoicesController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, ClaimsGuard)
   remove(@Param('id') id: string) {
     const isValid = mongoose.Types.ObjectId.isValid(id);
     if (!isValid) {
