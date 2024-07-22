@@ -24,7 +24,7 @@ import { Claims as RequiredClaims } from '../../../common/consts/claims';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @Post('/create')
   @UseGuards(JwtAuthGuard, ClaimsGuard)
@@ -100,6 +100,34 @@ export class UsersController {
     return findUser;
   }
 
+  @Get('/check-update-status')
+  @UseGuards(JwtAuthGuard)
+  async checkUpdateStatus(@Req() request: any) {
+    const { findUser } = await this.usersService.findByUsername(
+      request.user._doc.username,
+    );
+    const { customer } = findUser;
+    const { address } = customer;
+    if (!findUser)
+      throw new NotFoundException(
+        `User with username '${request.user._doc.username}' not found!`,
+      );
+    const requiredUserFields = ['name', 'username', 'email', 'companyName'];
+    const requiredCustomerFields = ['id', 'description', 'phone'];
+    const requiredAddressFields = ['city', 'country', 'line1', 'postal_code'];
+    const missingUserFields = requiredUserFields.filter(field => !findUser[field]);
+    const missingCustomerFields = requiredCustomerFields.filter(field => !customer[field]);
+    const missingAddressFields = requiredAddressFields.filter(field => !address[field]);
+
+    const missingFields = [
+      ...missingUserFields,
+      ...missingCustomerFields,
+      ...missingAddressFields,
+    ];
+
+    return { missingFields };
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard, ClaimsGuard)
   @Claims(RequiredClaims.CAN_ACCESS_USER_READ)
@@ -156,7 +184,7 @@ export class UsersController {
   @Patch(':id/claims/assign')
   @UseGuards(JwtAuthGuard, ClaimsGuard)
   @Claims(RequiredClaims.CAN_ACCESS_USER_UPDATE)
-  async addClaims(@Param('id') id: string, @Body('claims') claims: string[]) {
+  async assignClaims(@Param('id') id: string, @Body('claims') claims: string[]) {
     const isValid = mongoose.Types.ObjectId.isValid(id);
     if (!isValid) {
       throw new HttpException('Invalid ID', HttpStatus.BAD_REQUEST);
