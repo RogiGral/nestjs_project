@@ -22,9 +22,11 @@ export class ClaimsGuard implements CanActivate {
         const decoded = this.jwtService.decode(token) as any;
 
         const { findUser: user } = await this.userService.findOne(decoded._doc);
+        if (user.claims.includes(Claims.REQUIRE_UPDATE)) {
+            throw new ForbiddenException('User require to update. Check your status to see what needs to be updated');
+        }
 
         if (user.claims.includes(Claims.MANAGE)) return true;
-        if (user.claims.includes(Claims.REQUIRE_UPDATE)) return false;
 
         else if (!user || !requiredClaims.every(claim => user.claims.includes(claim))) {
             throw new ForbiddenException('Insufficient permissions');
