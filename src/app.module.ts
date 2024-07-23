@@ -9,6 +9,8 @@ import { InvoicesModule } from './modules/invoices';
 import { PaymentsModule } from './modules/payments';
 import { ProductsModule } from './modules/products';
 import { PricesModule } from './modules/prices';
+import { PaymentMethodsModule } from './modules/payment-methods';
+
 
 
 @Module({
@@ -26,6 +28,7 @@ import { PricesModule } from './modules/prices';
     PaymentsModule,
     ProductsModule,
     PricesModule,
+    PaymentMethodsModule,
   ],
 })
 export class AppModule { }
