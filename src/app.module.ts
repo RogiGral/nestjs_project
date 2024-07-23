@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './modules/auth';
@@ -10,11 +10,22 @@ import { PaymentsModule } from './modules/payments';
 import { ProductsModule } from './modules/products';
 import { PricesModule } from './modules/prices';
 import { PaymentMethodsModule } from './modules/payment-methods';
+import Stripe from 'stripe';
 
 
-
+@Global()
 @Module({
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: 'STRIPE',
+      useFactory: () => {
+        return new Stripe(process.env.STRIPE_API_KEY, {
+          apiVersion: '2024-06-20',
+        });
+      },
+    },
+  ],
   imports: [
     MongooseModule.forRoot('mongodb://localhost/nestjs'),
     AuthModule,
@@ -30,5 +41,6 @@ import { PaymentMethodsModule } from './modules/payment-methods';
     PricesModule,
     PaymentMethodsModule,
   ],
+  exports: ['STRIPE'],
 })
 export class AppModule { }

@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -15,17 +16,12 @@ export const EXCLUDE_FIELDS = '-__v -password';
 @Injectable()
 export class UsersService {
   private saltRounds: number = 10;
-  private stripe: Stripe;
 
   constructor(
     @InjectModel(UserEntity.name) private userModel: Model<UserEntity>,
     @InjectModel(InvoiceEntity.name) private invoiceModel: Model<InvoiceEntity>,
-  ) {
-
-    this.stripe = new Stripe(process.env.STRIPE_API_KEY, {
-      apiVersion: '2024-06-20',
-    });
-  }
+    @Inject('STRIPE') private readonly stripe: Stripe,
+  ) { }
 
   async create(createUserDto: CreateUserDto | RegisterUserDto) {
     const saltedPassword = await GeneratePassword(

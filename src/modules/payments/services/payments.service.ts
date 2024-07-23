@@ -1,4 +1,4 @@
-import { Injectable, RawBodyRequest } from '@nestjs/common';
+import { Inject, Injectable, RawBodyRequest } from '@nestjs/common';
 import Stripe from 'stripe';
 import { CreateCheckoutSessionDto } from '../dto';
 import {
@@ -10,17 +10,14 @@ import { UsersService } from '../../../modules/users';
 
 @Injectable()
 export class PaymentsService {
-  private stripe;
   private webhookSecret;
 
   constructor(
     private readonly invoiceService: InvoicesService,
     private readonly mailerService: MailerService,
     private readonly userService: UsersService,
+    @Inject('STRIPE') private readonly stripe: Stripe,
   ) {
-    this.stripe = new Stripe(process.env.STRIPE_API_KEY, {
-      apiVersion: '2024-06-20',
-    });
     this.webhookSecret = process.env.STRIPE_WH_KEY;
   }
 

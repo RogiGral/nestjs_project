@@ -1,16 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreatePriceDto, UpdatePriceDto } from '../dto';
 import Stripe from 'stripe';
 
 @Injectable()
 export class PricesService {
-  private stripe;
 
-  constructor() {
-    this.stripe = new Stripe(process.env.STRIPE_API_KEY, {
-      apiVersion: '2024-06-20',
-    });
-  }
+  constructor(@Inject('STRIPE') private readonly stripe: Stripe,) { }
 
   async create(createPriceDto: CreatePriceDto) {
     createPriceDto.unit_amount = createPriceDto.unit_amount * 100;
