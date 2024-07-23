@@ -103,26 +103,25 @@ export class UsersController {
   @Get('/check-update-status')
   @UseGuards(JwtAuthGuard)
   async checkUpdateStatus(@Req() request: any) {
-    const { findUser } = await this.usersService.findByUsername(
-      request.user._doc.username,
-    );
+    const { findUser } = await this.usersService.findByUsername(request.user._doc.username);
+
+    if (!findUser) {
+      throw new NotFoundException(`User with username '${request.user._doc.username}' not found!`);
+    }
+
+    const requiredFields = {
+      user: ['name', 'username', 'email', 'companyName'],
+      customer: ['id', 'description', 'phone'],
+      address: ['city', 'country', 'line1', 'postal_code']
+    };
+
     const { customer } = findUser;
     const { address } = customer;
-    if (!findUser)
-      throw new NotFoundException(
-        `User with username '${request.user._doc.username}' not found!`,
-      );
-    const requiredUserFields = ['name', 'username', 'email', 'companyName'];
-    const requiredCustomerFields = ['id', 'description', 'phone'];
-    const requiredAddressFields = ['city', 'country', 'line1', 'postal_code'];
-    const missingUserFields = requiredUserFields.filter(field => !findUser[field]);
-    const missingCustomerFields = requiredCustomerFields.filter(field => !customer[field]);
-    const missingAddressFields = requiredAddressFields.filter(field => !address[field]);
 
     const missingFields = [
-      ...missingUserFields,
-      ...missingCustomerFields,
-      ...missingAddressFields,
+      ...requiredFields.user.filter(field => !findUser[field]),
+      ...requiredFields.customer.filter(field => !customer[field]),
+      ...requiredFields.address.filter(field => !address[field])
     ];
 
     return { missingFields };
