@@ -1,4 +1,4 @@
-import { Inject, Injectable, RawBodyRequest } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { CreateCheckoutSessionDto } from '../dto';
 import {
@@ -6,7 +6,7 @@ import {
   MailerService,
 } from '../../../modules/invoices/services';
 import { CompanyDto, ConsumerDto, CreateInvoiceDto, LineItemsDto } from '../../../modules/invoices/dto';
-import { UsersService } from '../../../modules/users';
+import { CustomerDto } from '../../../modules/users/dto';
 
 @Injectable()
 export class PaymentsService {
@@ -15,13 +15,14 @@ export class PaymentsService {
   constructor(
     private readonly invoiceService: InvoicesService,
     private readonly mailerService: MailerService,
-    private readonly userService: UsersService,
     @Inject('STRIPE') private readonly stripe: Stripe,
   ) {
     this.webhookSecret = process.env.STRIPE_WH_KEY;
   }
 
-  async createCheckout(createCheckoutSessionDto: CreateCheckoutSessionDto) {
+  async createCheckout(createCheckoutSessionDto: CreateCheckoutSessionDto, customer?: CustomerDto) {
+    const isPaymentOrSubscription = await this.checkIfPaymentOrSubscription(createCheckoutSessionDto.priceList);
+    const isGuest = customer ? false : true;
     try {
       const stripeResult = await this.stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -36,10 +37,15 @@ export class PaymentsService {
             },
           }
         )),
-        billing_address_collection: 'required',
-        mode: 'payment',
+        payment_method_collection: isPaymentOrSubscription ? 'if_required' : 'always',
+        billing_address_collection: isGuest ? 'required' : 'auto',
+        mode: isPaymentOrSubscription ? 'subscription' : 'payment',
+        customer: isGuest ? undefined : customer.id,
         tax_id_collection: {
           enabled: true,
+        },
+        customer_update: isGuest ? undefined : {
+          name: 'auto',
         },
         success_url: createCheckoutSessionDto.successUrl,
         cancel_url: createCheckoutSessionDto.cancelUrl,
@@ -49,6 +55,29 @@ export class PaymentsService {
       console.log(error);
     }
   }
+
+  cancelSubscription(subscriptionId: string) {
+    try {
+      const subscription = this.stripe.subscriptions.cancel(subscriptionId);
+      return subscription;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async checkIfPaymentOrSubscription(priceList: any): Promise<boolean> {
+    const results = await Promise.all(
+      priceList.map(async (element) => {
+        if (!element.priceId) {
+          throw new Error('Price ID is required');
+        }
+        const price = await this.stripe.prices.retrieve(element.priceId);
+        return price.type === 'recurring';
+      })
+    );
+    return results.some(result => result);
+  }
+
 
   async retriveCheckoutLineItems(checkoutSesionId: string) {
     try {
@@ -80,10 +109,28 @@ export class PaymentsService {
       return;
     }
 
-    if (event.type === 'checkout.session.completed') {
+    if (event.type === 'invoice.created') {
+      console.log('Invoice was created');
+      const customerInfo = await this.stripe.customers.retrieve(event.data.object.customer);
+      const createInvoice = await this.mapToInvoiceDto(customerInfo, event.data.object.lines);
+      const invoiceId = await this.invoiceService.create(createInvoice);
+      const pdfBuffer = await this.invoiceService.generatePDF(invoiceId);
+      await this.mailerService.sendMail(
+        createInvoice.consumer.email,
+        'Your Invoice',
+        'Please find attached your invoice.',
+        [
+          {
+            filename: `invoice_${invoiceId.id}.pdf`,
+            content: pdfBuffer,
+          },
+        ],
+      );
+    }
+    if (event.type === 'checkout.session.completed' && event.data.object.mode === 'payment') {
       const checkoutId = event.data.object.id;
       const lineItemsList = await this.retriveCheckoutLineItems(checkoutId);
-      const createInvoice = this.mapToInvoiceDto(event.data.object.customer_details, lineItemsList);
+      const createInvoice = await this.mapToInvoiceDto(event.data.object.customer_details, lineItemsList);
       const invoiceId = await this.invoiceService.create(createInvoice);
       const pdfBuffer = await this.invoiceService.generatePDF(invoiceId);
       await this.mailerService.sendMail(
@@ -100,10 +147,13 @@ export class PaymentsService {
     }
   }
 
-  mapToInvoiceDto(customerDetails: any, lineItemsList: any): CreateInvoiceDto {
-    const { address, email, name, phone, tax_ids } = customerDetails;
+  async mapToInvoiceDto(customerDetails: any, lineItemsList: any): Promise<CreateInvoiceDto> {
+    const { address, email, name, phone } = customerDetails;
+    let tax_ids = customerDetails.tax_ids;
 
-    console.log(tax_ids)
+    if (!tax_ids) {
+      tax_ids = await this.stripe.customers.listTaxIds(customerDetails.id);
+    }
 
     const consumer: ConsumerDto = {
       email,
@@ -118,11 +168,18 @@ export class PaymentsService {
       name,
       phoneNumber: phone,
     };
+    // to jest array idk którą wartość wziąc, może dodać blocker żeby mieć max 1 
+    console.log(tax_ids.data[0].country);
+    const tax_value = tax_ids.data.length ?
+      tax_ids.data[0].country !== 'USA' ?
+        tax_ids.data[0].country !== 'PL' ?
+          tax_ids.data[0].country !== 'CZ' ?
+            "20%" : "15%" : "10%" : "5%" : '20%';
+    //usa 5%, pl 10%, cz 15%, rest 20%
 
-    const tax_value = tax_ids.length ? '0%' : '20%';
-    const company: CompanyDto = tax_ids.length ? {
+    const company: CompanyDto = tax_ids.data.length ? {
       name: name,
-      tin_number: tax_ids[0].value,
+      tin_number: tax_ids.data[0].value,
     } : {
       name: '',
       tin_number: '',

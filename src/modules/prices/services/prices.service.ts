@@ -18,8 +18,9 @@ export class PricesService {
     return priceList;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} price`;
+  findOne(id: string) {
+    const price = this.stripe.prices.retrieve(id);
+    return price;
   }
 
   update(id: number, updatePriceDto: UpdatePriceDto) {

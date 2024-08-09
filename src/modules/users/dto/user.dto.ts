@@ -40,6 +40,32 @@ export class AddressDto {
   state?: string;
 }
 
+export class TaxDto {
+  @IsString()
+  @IsNotEmpty()
+  value: string;
+
+  @IsString()
+  @IsNotEmpty()
+  type: string;
+}
+
+export class CompanyDto {
+
+  @IsString()
+  @IsNotEmpty()
+  type: string;
+
+  @IsString()
+  @IsNotEmpty()
+  value: string;
+
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+}
+
 export class CustomerDto {
 
   @IsString()
@@ -56,7 +82,7 @@ export class CustomerDto {
   address: AddressDto;
 
   @IsString()
-  @IsPhoneNumber('PL' || 'US' || "DE")
+  @IsPhoneNumber('PL' || 'US' || "DE" || "CZ")
   @IsNotEmpty()
   phone: string;
 
@@ -77,9 +103,10 @@ export class UserDto {
   @IsEmail()
   email: string;
 
-  @IsString()
   @IsNotEmpty()
-  companyName: string;
+  @ValidateNested()
+  @Type(() => CompanyDto)
+  company: CompanyDto;
 
   @IsNotEmpty()
   @ValidateNested()

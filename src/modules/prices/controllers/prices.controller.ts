@@ -27,7 +27,7 @@ export class PricesController {
 
   @Get('get/:id')
   findOne(@Param('id') id: string) {
-    return this.pricesService.findOne(+id);
+    return this.pricesService.findOne(id);
   }
 
   @Patch('update/:id')

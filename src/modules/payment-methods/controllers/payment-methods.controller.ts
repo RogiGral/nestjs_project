@@ -7,9 +7,10 @@ import { CreatePaymentMethodDto, UpdatePaymentMethodDto } from '../dto';
 export class PaymentMethodsController {
   constructor(private readonly paymentMethodsService: PaymentMethodsService) { }
 
-  @Post()
-  create(@Body() createPaymentMethodDto: CreatePaymentMethodDto) {
-    return this.paymentMethodsService.create(createPaymentMethodDto);
+  @Post('create/:userId')
+  attach(@Param('userId') userId: string, @Body() createPaymentMethodDto: CreatePaymentMethodDto) {
+    console.log(createPaymentMethodDto);
+    return this.paymentMethodsService.attach(userId);
   }
 
   @Get()
@@ -24,7 +25,7 @@ export class PaymentMethodsController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePaymentMethodDto: UpdatePaymentMethodDto) {
-    return this.paymentMethodsService.update(+id, updatePaymentMethodDto);
+    return this.paymentMethodsService.update(id, updatePaymentMethodDto);
   }
 
   @Delete(':id')

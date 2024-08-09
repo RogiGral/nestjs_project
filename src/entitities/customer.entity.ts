@@ -18,8 +18,7 @@ export class Customer {
     name: string;
 
     @Prop()
-    phoneNumber: string;
-
+    phone: string;
 
 }
 

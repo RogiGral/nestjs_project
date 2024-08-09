@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsString, MinLength } from 'class-validator';
 import { Types, Document, Schema as MongooseSchema } from 'mongoose';
 import { Customer } from './customer.entity';
+import { Company } from './company.entity';
 
 @Schema()
 export class UserEntity {
@@ -23,8 +24,8 @@ export class UserEntity {
   @MinLength(6)
   password: string;
 
-  @Prop({ required: true })
-  companyName: string;
+  @Prop({ type: MongooseSchema.Types.Mixed, required: true })
+  company: Company;
 
   @Prop({ type: [String], required: true })
   claims: string[];

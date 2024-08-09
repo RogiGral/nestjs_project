@@ -11,20 +11,23 @@ import {
 import { CreateCheckoutSessionDto } from '../dto';
 import { PaymentsService } from '../services';
 import { Request, Response } from 'express';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(private readonly paymentsService: PaymentsService, private jwtService: JwtService,) { }
 
   @Post('checkout/create')
   async createCheckoutSession(
+    @Req() req: Request,
     @Body() createCheckoutSessionDto: CreateCheckoutSessionDto,
     @Res() res: Response,
   ) {
+    const decoded = this.jwtService.decode(req.headers.authorization?.split(' ')[1]) as any;
     const data = await this.paymentsService.createCheckout(
-      createCheckoutSessionDto,
+      createCheckoutSessionDto, decoded?._doc.customer
     );
-    res.status(200).send({ url: data.url });
+    res.status(200).send({ data });
   }
 
   @Post('checkout/lineitems/:checkoutId')
@@ -33,6 +36,15 @@ export class PaymentsController {
     @Res() res: Response,
   ) {
     await this.paymentsService.retriveCheckoutLineItems(checkoutId);
+    res.status(200).send();
+  }
+
+  @Post('subscription/cancel/:subscriptionId')
+  async cancelSubscription(
+    @Param('subscriptionId') subscriptionId: string,
+    @Res() res: Response,
+  ) {
+    await this.paymentsService.cancelSubscription(subscriptionId);
     res.status(200).send();
   }
 

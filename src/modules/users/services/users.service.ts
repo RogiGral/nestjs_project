@@ -53,8 +53,7 @@ export class UsersService {
       customer = await this.stripe.customers.create({
         email: createUserDto.email,
         name: createUserDto.name,
-        description: createUserDto.customer.description,
-        address: createUserDto.customer.address,
+        address: createUserDto.customer.address
       });
     } catch (error) {
       throw new ForbiddenException(
@@ -67,7 +66,7 @@ export class UsersService {
     newUser.customer.id = customer.id;
 
     const saveUser = await newUser.save();
-    console.log(saveUser);
+    return saveUser;
   }
 
 
@@ -152,6 +151,7 @@ export class UsersService {
   }
   async update(id: string, updateUserDto: UpdateUserDto) {
     const findUser = await this.userModel.findOne({ _id: id }, { password: 0 });
+    const stripeCustomerId = findUser.customer.id;
 
     if (!findUser)
       throw new NotFoundException(
@@ -167,7 +167,21 @@ export class UsersService {
     }
 
     Object.assign(findUser, updateUserDto);
-    await findUser.save();
+    const user = await findUser.save();
+    await this.stripe.customers.update(stripeCustomerId, {
+      email: findUser.email,
+      name: findUser.name,
+      phone: findUser.customer.phone,
+      address: {
+        line1: findUser.customer.address.line1,
+        line2: findUser.customer.address.line2,
+        city: findUser.customer.address.city,
+        postal_code: findUser.customer.address.postal_code,
+        state: findUser.customer.address.state,
+        country: findUser.customer.address.country,
+      }
+    });
+    return user;
   }
 
   async assignClaims(user: UserDto) {
@@ -182,7 +196,7 @@ export class UsersService {
       );
 
     Object.assign(findUser, user);
-    await findUser.save();
+    return await findUser.save();
   }
 
   async remove(id: string): Promise<UserEntity> {

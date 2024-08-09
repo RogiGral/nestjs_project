@@ -1,6 +1,7 @@
 import { PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsCreditCard, IsEnum, IsNotEmpty, IsNumber, IsString, Max, MaxLength, Min, MinLength, ValidateNested } from "class-validator";
+import { IsCreditCard, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, MaxLength, Min, MinLength, ValidateNested } from "class-validator";
+
 
 enum PaymentMethodType {
     CREDIT_CARD = 'card',
@@ -41,7 +42,6 @@ export class CreatePaymentMethodDto {
     @ValidateNested()
     @Type(() => CardMethodDto)
     method: CardMethodDto;
-
 
 }
 
