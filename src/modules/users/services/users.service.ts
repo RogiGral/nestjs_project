@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,17 +9,19 @@ import { Model } from 'mongoose';
 import { InvoiceEntity, UserEntity } from '../../../entitities';
 import { CreateUserDto, RegisterUserDto, UpdateUserDto, UserDto } from '../dto';
 import { GeneratePassword } from '../../../common/utilities';
+import Stripe from 'stripe';
 
 export const EXCLUDE_FIELDS = '-__v -password';
 
 @Injectable()
 export class UsersService {
-  saltRounds: number = 10;
+  private saltRounds: number = 10;
 
   constructor(
     @InjectModel(UserEntity.name) private userModel: Model<UserEntity>,
     @InjectModel(InvoiceEntity.name) private invoiceModel: Model<InvoiceEntity>,
-  ) {}
+    @Inject('STRIPE') private readonly stripe: Stripe,
+  ) { }
 
   async create(createUserDto: CreateUserDto | RegisterUserDto) {
     const saltedPassword = await GeneratePassword(
@@ -26,15 +29,46 @@ export class UsersService {
       this.saltRounds,
     );
 
+    let customer: any;
+
     if (createUserDto instanceof RegisterUserDto) {
       createUserDto.claims = ['CAN_ACCESS_USER_STATUS'];
     }
 
     createUserDto.password = saltedPassword;
+
+    //check if user exist
+    const userExist = await this.userModel.findOne({
+      name: createUserDto.name,
+    });
+
+    if (userExist) {
+      throw new ForbiddenException(
+        `Failed to create user! User with name '${createUserDto.name}' already exist.`,
+      );
+    }
+
+    //create stripe customer
+    try {
+      customer = await this.stripe.customers.create({
+        email: createUserDto.email,
+        name: createUserDto.name,
+        address: createUserDto.customer.address
+      });
+    } catch (error) {
+      throw new ForbiddenException(
+        `Failed to create customer for user with email '${createUserDto.email}'`,
+      );
+    }
+
     const newUser = new this.userModel(createUserDto);
-    const saveUSer = await newUser.save();
-    console.log(saveUSer);
+
+    newUser.customer.id = customer.id;
+
+    const saveUser = await newUser.save();
+    return saveUser;
   }
+
 
   async findAll(
     nextInputCursor: string,
@@ -117,6 +151,7 @@ export class UsersService {
   }
   async update(id: string, updateUserDto: UpdateUserDto) {
     const findUser = await this.userModel.findOne({ _id: id }, { password: 0 });
+    const stripeCustomerId = findUser.customer.id;
 
     if (!findUser)
       throw new NotFoundException(
@@ -132,7 +167,21 @@ export class UsersService {
     }
 
     Object.assign(findUser, updateUserDto);
-    await findUser.save();
+    const user = await findUser.save();
+    await this.stripe.customers.update(stripeCustomerId, {
+      email: findUser.email,
+      name: findUser.name,
+      phone: findUser.customer.phone,
+      address: {
+        line1: findUser.customer.address.line1,
+        line2: findUser.customer.address.line2,
+        city: findUser.customer.address.city,
+        postal_code: findUser.customer.address.postal_code,
+        state: findUser.customer.address.state,
+        country: findUser.customer.address.country,
+      }
+    });
+    return user;
   }
 
   async assignClaims(user: UserDto) {
@@ -147,7 +196,7 @@ export class UsersService {
       );
 
     Object.assign(findUser, user);
-    await findUser.save();
+    return await findUser.save();
   }
 
   async remove(id: string): Promise<UserEntity> {

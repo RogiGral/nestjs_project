@@ -21,10 +21,11 @@ import { CreateUserDto, RegisterUserDto, UpdateUserDto } from '../dto';
 import { ClaimsGuard, JwtAuthGuard } from '../../../common/guards';
 import { Claims } from '../../../common/decorators';
 import { Claims as RequiredClaims } from '../../../common/consts/claims';
+import { createResponse } from 'src/common/utilities';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @Post('/create')
   @UseGuards(JwtAuthGuard, ClaimsGuard)
@@ -42,8 +43,8 @@ export class UsersController {
     if (createUserDto.claims && !this.validateClaims(createUserDto.claims)) {
       throw new HttpException('Invalid claims', HttpStatus.BAD_REQUEST);
     }
-    await this.usersService.create(createUserDto);
-    return { message: 'User has been created', statusCode: HttpStatus.CREATED };
+    const user = await this.usersService.create(createUserDto);
+    return createResponse({ body: user, statusCode: HttpStatus.CREATED });
   }
 
   @Post('/register')
@@ -57,12 +58,9 @@ export class UsersController {
         HttpStatus.FOUND,
       );
     }
-    await this.usersService.create(registerUserDto);
+    const user = await this.usersService.create(registerUserDto);
 
-    return {
-      message: 'User has been registered',
-      statusCode: HttpStatus.CREATED,
-    };
+    return createResponse({ body: user, statusCode: HttpStatus.CREATED });
   }
 
   @Get()
@@ -76,14 +74,15 @@ export class UsersController {
         prevInputCursor,
         limitNumber,
       );
-
-    return {
-      findUsers,
-      status: HttpStatus.OK,
-      nextCursor,
-      prevCursor,
-      totalResults,
-    };
+    return createResponse({
+      body: {
+        findUsers,
+        nextCursor,
+        prevCursor,
+        totalResults,
+      },
+      statusCode: HttpStatus.OK
+    });
   }
 
   @Get('/status')
@@ -97,7 +96,34 @@ export class UsersController {
       throw new NotFoundException(
         `User with username '${request.user._doc.username}' not found!`,
       );
-    return findUser;
+    return createResponse({ body: findUser, statusCode: HttpStatus.OK });
+  }
+
+  @Get('/check-update-status')
+  @UseGuards(JwtAuthGuard)
+  async checkUpdateStatus(@Req() request: any) {
+    const { findUser } = await this.usersService.findByUsername(request.user._doc.username);
+
+    if (!findUser) {
+      throw new NotFoundException(`User with username '${request.user._doc.username}' not found!`);
+    }
+
+    const requiredFields = {
+      user: ['name', 'username', 'email', 'companyName'],
+      customer: ['id', 'description', 'phone'],
+      address: ['city', 'country', 'line1', 'postal_code']
+    };
+
+    const { customer } = findUser;
+    const { address } = customer;
+
+    const missingFields = [
+      ...requiredFields.user.filter(field => !findUser[field]),
+      ...requiredFields.customer.filter(field => !customer[field]),
+      ...requiredFields.address.filter(field => !address[field])
+    ];
+
+    return createResponse({ body: missingFields, statusCode: HttpStatus.OK });
   }
 
   @Get(':id')
@@ -111,7 +137,7 @@ export class UsersController {
     const { findUser } = await this.usersService.findOne(id);
     if (!findUser)
       throw new NotFoundException(`User with id '${id}' not found!`);
-    return findUser;
+    return createResponse({ body: findUser, statusCode: HttpStatus.OK });
   }
 
   @Get(':username')
@@ -123,7 +149,7 @@ export class UsersController {
       throw new NotFoundException(
         `User with username '${username}' not found!`,
       );
-    return findUser;
+    return createResponse({ body: findUser, statusCode: HttpStatus.OK });
   }
 
   @Patch(':id')
@@ -135,8 +161,8 @@ export class UsersController {
     if (!isValid) {
       throw new HttpException('Invalid ID', HttpStatus.BAD_REQUEST);
     }
-    await this.usersService.update(id, updateUserDto);
-    return { message: 'User has been updated', statusCode: HttpStatus.CREATED };
+    const user = await this.usersService.update(id, updateUserDto);
+    return createResponse({ body: user, statusCode: HttpStatus.OK });
   }
 
   @Delete(':id')
@@ -150,13 +176,15 @@ export class UsersController {
     if (request.user._doc._id == id) {
       throw new ForbiddenException('Trying to delete currently logged-in user');
     }
-    return await this.usersService.remove(id);
+    const user = await this.usersService.remove(id);
+    return createResponse({ body: user, statusCode: HttpStatus.OK });
+
   }
 
   @Patch(':id/claims/assign')
   @UseGuards(JwtAuthGuard, ClaimsGuard)
   @Claims(RequiredClaims.CAN_ACCESS_USER_UPDATE)
-  async addClaims(@Param('id') id: string, @Body('claims') claims: string[]) {
+  async assignClaims(@Param('id') id: string, @Body('claims') claims: string[]) {
     const isValid = mongoose.Types.ObjectId.isValid(id);
     if (!isValid) {
       throw new HttpException('Invalid ID', HttpStatus.BAD_REQUEST);
@@ -170,11 +198,8 @@ export class UsersController {
 
     findUser.claims = [...new Set([...findUser.claims, ...claims])];
 
-    await this.usersService.assignClaims(findUser);
-    return {
-      message: `User claims: ${claims} has been updated`,
-      statusCode: HttpStatus.CREATED,
-    };
+    const user = await this.usersService.assignClaims(findUser);
+    return createResponse({ body: user, statusCode: HttpStatus.CREATED });
   }
 
   @Patch(':id/claims/remove')
@@ -199,12 +224,9 @@ export class UsersController {
       (claim) => !claims.includes(claim),
     );
 
-    await this.usersService.assignClaims(findUser);
+    const user = await this.usersService.assignClaims(findUser);
 
-    return {
-      message: `User claims: ${claims} has been removed`,
-      statusCode: HttpStatus.CREATED,
-    };
+    return createResponse({ body: user, statusCode: HttpStatus.CREATED });
   }
 
   validateClaims(claims: string[]): boolean {
