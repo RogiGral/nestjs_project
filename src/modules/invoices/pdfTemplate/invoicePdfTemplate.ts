@@ -110,9 +110,9 @@ export const HTML_INVOICE_TEMPLATE = (invoice: any): string => `
             ${invoice.lineItems.map((item: any) => `
             <tr class="item">
                 <td>${item.name}</td>
-                <td>$${item.amount_unit / 100}</td>
+                <td>$${(item.amount_unit / 100).toFixed(2)}</td>
                 <td>${item.quantity}</td>
-                <td>$${item.amount_total / 100}</td>
+                <td>$${(item.amount_total / 100).toFixed(2)}</td>
                 <td>$${item.tax_value}</td>
                 <td>${item.currency.toUpperCase()}</td>
             </tr>
@@ -120,7 +120,7 @@ export const HTML_INVOICE_TEMPLATE = (invoice: any): string => `
             <tr class="total">
                 <td colspan="4"></td>
                 <td colspan="2">
-                    Final Amount: $${invoice.finalAmount / 100}
+                    Final Amount: $${(invoice.finalAmount / 100).toFixed(2)}
                 </td>
             </tr>
         </table>

@@ -1,17 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
 import Stripe from 'stripe';
 
 @Injectable()
 export class ProductsService {
-  private stripe;
 
-  constructor() {
-    this.stripe = new Stripe(process.env.STRIPE_API_KEY, {
-      apiVersion: '2024-06-20',
-    });
-  }
+  constructor(@Inject('STRIPE') private readonly stripe: Stripe,) { }
 
   async create(createProductDto: CreateProductDto) {
     const product = await this.stripe.products.create(createProductDto);
