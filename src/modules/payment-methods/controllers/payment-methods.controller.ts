@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { PaymentMethodsService } from '../services';
-import { CreatePaymentMethodDto, UpdatePaymentMethodDto } from '../dto';
+import { ChangePaymentMethodDto, CreatePaymentMethodDto, UpdatePaymentMethodDto } from '../dto';
 
 
 @Controller('payment-methods')
@@ -9,14 +9,22 @@ export class PaymentMethodsController {
 
   @Post('create/:userId')
   attach(@Param('userId') userId: string, @Body() createPaymentMethodDto: CreatePaymentMethodDto) {
-    console.log(createPaymentMethodDto);
-    return this.paymentMethodsService.attach(userId);
+    return this.paymentMethodsService.attach(userId, createPaymentMethodDto);
+  }
+  @Post('change-customer/:userId')
+  changeCustomerDefaultPaymentMethod(@Param('userId') userId: string, @Body() changePaymentMethodDto: ChangePaymentMethodDto) {
+    return this.paymentMethodsService.changeCustomerDefaultPaymentMethod(userId, changePaymentMethodDto);
+  }
+  @Post('change-subscription/:userId/:subscriptionId')
+  changeSubscriptionDefaultPaymentMethod(@Param('userId') userId: string, @Param('subscriptionId') subscriptionId: string, @Body() changePaymentMethodDto: ChangePaymentMethodDto) {
+    return this.paymentMethodsService.changeSubscriptionPaymentMethod(userId, subscriptionId, changePaymentMethodDto);
   }
 
-  @Get()
-  findAll() {
-    return this.paymentMethodsService.findAll();
+  @Get('findAll/:userId')
+  findAll(@Param('userId') userId: string) {
+    return this.paymentMethodsService.findAll(userId);
   }
+
 
   @Get(':id')
   findOne(@Param('id') id: string) {

@@ -108,8 +108,7 @@ export class PaymentsService {
       console.log(`Webhook Error: ${err.message}`);
       return;
     }
-
-    if (event.type === 'invoice.created') {
+    if (event.type === 'invoice.paid') {
       console.log('Invoice was created');
       const customerInfo = await this.stripe.customers.retrieve(event.data.object.customer);
       const createInvoice = await this.mapToInvoiceDto(customerInfo, event.data.object.lines);

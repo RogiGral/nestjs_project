@@ -5,6 +5,8 @@ import { IsCreditCard, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, 
 
 enum PaymentMethodType {
     CREDIT_CARD = 'card',
+    VISA = 'pm_card_visa',
+    MASTERCARD = 'pm_card_mastercard',
 }
 
 class CardMethodDto {
@@ -43,6 +45,12 @@ export class CreatePaymentMethodDto {
     @Type(() => CardMethodDto)
     method: CardMethodDto;
 
+}
+
+export class ChangePaymentMethodDto {
+    @IsNotEmpty()
+    @IsString()
+    payment_method_id: string
 }
 
 export class UpdatePaymentMethodDto extends PartialType(CreatePaymentMethodDto) { }
