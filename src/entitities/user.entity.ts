@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsString, MinLength } from 'class-validator';
-import { Types, Document, Schema as MongooseSchema } from 'mongoose';
+import { Types, Schema as MongooseSchema } from 'mongoose';
 import { Customer } from './customer.entity';
 import { Company } from './company.entity';
 
@@ -35,6 +35,12 @@ export class UserEntity {
 
   @Prop({ type: MongooseSchema.Types.Mixed, required: true })
   customer: Customer;
+
+  @Prop({ type: Boolean, default: false })
+  online: boolean;
+
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'MessageEntity' }] })
+  messages: Types.ObjectId[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(UserEntity);

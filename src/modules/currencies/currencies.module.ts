@@ -8,6 +8,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import {
   InvoiceEntity,
   InvoiceSchema,
+  MessageEntity,
+  MessageSchema,
   UserEntity,
   UserSchema,
 } from '../../entitities';
@@ -15,13 +17,14 @@ import {
 @Module({
   imports: [
     HttpModule,
-    MongooseModule.forFeature([{ name: UserEntity.name, schema: UserSchema }]),
     MongooseModule.forFeature([
-      { name: InvoiceEntity.name, schema: InvoiceSchema },
+      { name: UserEntity.name, schema: UserSchema },
+      { name: MessageEntity.name, schema: MessageSchema },
+      { name: InvoiceEntity.name, schema: InvoiceSchema }
     ]),
   ],
   controllers: [CurrencyController],
   providers: [CurrencyService, JwtService, UsersService],
   exports: [CurrencyService],
 })
-export class CurrencyModule {}
+export class CurrencyModule { }

@@ -4,16 +4,17 @@ import { PaymentMethodsService } from './services';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserEntity, UserSchema, InvoiceEntity, InvoiceSchema, Counter, CounterSchema } from '../../entitities';
+import { UserEntity, UserSchema, InvoiceEntity, InvoiceSchema, Counter, CounterSchema, MessageEntity, MessageSchema } from '../../entitities';
 
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: UserEntity.name, schema: UserSchema }]),
     MongooseModule.forFeature([
+      { name: UserEntity.name, schema: UserSchema },
+      { name: MessageEntity.name, schema: MessageSchema },
       { name: InvoiceEntity.name, schema: InvoiceSchema },
+      { name: Counter.name, schema: CounterSchema }
     ]),
-    MongooseModule.forFeature([{ name: Counter.name, schema: CounterSchema }]),
   ],
   controllers: [PaymentMethodsController],
   providers: [PaymentMethodsService, JwtService, UsersService],

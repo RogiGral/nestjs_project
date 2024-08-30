@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { InvoiceEntity, UserEntity } from '../../../entitities';
+import { InvoiceEntity, MessageEntity, UserEntity } from '../../../entitities';
 import { CreateUserDto, RegisterUserDto, UpdateUserDto, UserDto } from '../dto';
 import { GeneratePassword } from '../../../common/utilities';
 import Stripe from 'stripe';
@@ -21,6 +21,7 @@ export class UsersService {
     @InjectModel(UserEntity.name) private userModel: Model<UserEntity>,
     @InjectModel(InvoiceEntity.name) private invoiceModel: Model<InvoiceEntity>,
     @Inject('STRIPE') private readonly stripe: Stripe,
+    @InjectModel(MessageEntity.name) private readonly messageModel: Model<MessageEntity>,
   ) { }
 
   async create(createUserDto: CreateUserDto | RegisterUserDto) {
@@ -219,6 +220,16 @@ export class UsersService {
       userId,
       { $push: { invoices: invoiceId } },
       { new: true, useFindAndModify: false },
+    );
+  }
+
+  async saveMessage(toUsername: string, messageDto: { from: string; content: string }) {
+    const message = new this.messageModel(messageDto);
+    const savedMessage = await message.save();
+
+    await this.userModel.updateOne(
+      { username: toUsername },
+      { $push: { messages: savedMessage._id } }
     );
   }
 }

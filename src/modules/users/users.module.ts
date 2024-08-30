@@ -3,6 +3,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import {
   InvoiceEntity,
   InvoiceSchema,
+  MessageEntity,
+  MessageSchema,
   UserEntity,
   UserSchema,
 } from '../../entitities';
@@ -12,13 +14,14 @@ import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: UserEntity.name, schema: UserSchema }]),
     MongooseModule.forFeature([
-      { name: InvoiceEntity.name, schema: InvoiceSchema },
+      { name: UserEntity.name, schema: UserSchema },
+      { name: MessageEntity.name, schema: MessageSchema },
+      { name: InvoiceEntity.name, schema: InvoiceSchema }
     ]),
   ],
   controllers: [UsersController],
   providers: [UsersService, JwtService],
   exports: [UsersService],
 })
-export class UsersModule {}
+export class UsersModule { }
