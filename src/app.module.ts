@@ -10,6 +10,7 @@ import { PaymentsModule } from './modules/payments';
 import { ProductsModule } from './modules/products';
 import { PricesModule } from './modules/prices';
 import { PaymentMethodsModule } from './modules/payment-methods';
+import { EventsModule } from './modules/events/events.module';
 import Stripe from 'stripe';
 
 
@@ -40,6 +41,7 @@ import Stripe from 'stripe';
     ProductsModule,
     PricesModule,
     PaymentMethodsModule,
+    EventsModule,
   ],
   exports: ['STRIPE'],
 })

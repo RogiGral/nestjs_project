@@ -19,6 +19,7 @@ import {
 } from '../../entitities';
 import { RawBodyMiddleware } from '../../common/middlewares/rawBodyMiddleware';
 import { InvoicesService, MailerService } from '../invoices/services';
+import { EventsService } from '../events';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { InvoicesService, MailerService } from '../invoices/services';
     MailerService,
     UsersService,
     JwtService,
+    EventsService
   ],
   exports: [PaymentsService],
 })
