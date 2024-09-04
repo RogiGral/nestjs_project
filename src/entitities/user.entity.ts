@@ -41,6 +41,10 @@ export class UserEntity {
 
   @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'MessageEntity' }] })
   messages: Types.ObjectId[];
+
+  @Prop({ type: String })
+  @IsString()
+  wsClientId: string
 }
 
 export const UserSchema = SchemaFactory.createForClass(UserEntity);
