@@ -21,7 +21,6 @@ import {
 } from '../../entitities';
 import { RawBodyMiddleware } from '../../common/middlewares/rawBodyMiddleware';
 import { InvoicesService, MailerService } from '../invoices/services';
-import { EventsService } from '../events';
 
 @Module({
   imports: [
@@ -38,8 +37,7 @@ import { EventsService } from '../events';
     InvoicesService,
     MailerService,
     UsersService,
-    JwtService,
-    EventsService
+    JwtService
   ],
   exports: [PaymentsService],
 })
