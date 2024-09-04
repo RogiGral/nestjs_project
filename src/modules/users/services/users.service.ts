@@ -10,11 +10,13 @@ import { InvoiceEntity, MessageEntity, UserEntity } from '../../../entitities';
 import { CreateUserDto, RegisterUserDto, UpdateUserDto, UserDto } from '../dto';
 import { GeneratePassword } from '../../../common/utilities';
 import Stripe from 'stripe';
+import { find } from 'rxjs';
 
 export const EXCLUDE_FIELDS = '-__v -password';
 
 @Injectable()
 export class UsersService {
+
   private saltRounds: number = 10;
 
   constructor(
@@ -68,6 +70,10 @@ export class UsersService {
 
     const saveUser = await newUser.save();
     return saveUser;
+  }
+
+  async findAllOnline() {
+    return this.userModel.find({}, { username: 1, online: 1, wsClientId: 1 }).exec();
   }
 
 
@@ -130,10 +136,17 @@ export class UsersService {
   async findOne(id: string): Promise<any> {
     const findUser = await this.userModel
       .findOne({ _id: id }, { password: 0 })
-      .populate({
-        path: 'invoices',
-        model: this.invoiceModel,
-      });
+      .populate([
+        {
+          path: 'invoices',
+          model: this.invoiceModel,
+        },
+        {
+          path: 'messages',
+          model: this.messageModel,
+        },
+      ]);
+
     return { findUser };
   }
 
@@ -223,6 +236,21 @@ export class UsersService {
     );
   }
 
+  async updateUserStatus(username: string, wsClientId: string, online: boolean): Promise<void> {
+    let user: any;
+    try {
+      user = await this.userModel.findOne({ username: username });
+      user.online = online;
+      user.wsClientId = wsClientId;
+    } catch (error) {
+      throw new ForbiddenException(
+        `User with username '${username}' not found.`,
+      );
+    }
+    await user.save();
+
+  }
+
   async saveMessage(toUsername: string, messageDto: { from: string; content: string }) {
     const message = new this.messageModel(messageDto);
     const savedMessage = await message.save();
@@ -231,5 +259,22 @@ export class UsersService {
       { username: toUsername },
       { $push: { messages: savedMessage._id } }
     );
+  }
+
+  async findMessages(username: string) {
+    const userMessages = await this.userModel.findOne({ username }, { messages: 1 }).populate({
+      path: 'messages',
+      model: this.messageModel,
+    });
+
+    if (!userMessages) {
+      throw new NotFoundException(`User with username '${username}' not found.`);
+    }
+
+    const messages = userMessages.messages;
+
+    await this.messageModel.deleteMany({ _id: { $in: messages } });
+
+    return userMessages;
   }
 }
