@@ -1,3 +1,2 @@
-export * from './events.gateway';
-export * from './events.module';
-export * from './events.service';
+export * from './chat.gateway';
+export * from './chatmodule';
