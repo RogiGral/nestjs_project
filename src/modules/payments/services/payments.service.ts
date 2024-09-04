@@ -7,7 +7,6 @@ import {
 } from '../../../modules/invoices/services';
 import { CompanyDto, ConsumerDto, CreateInvoiceDto, LineItemsDto } from '../../../modules/invoices/dto';
 import { CustomerDto } from '../../../modules/users/dto';
-import { EventsService } from '../../events';
 
 @Injectable()
 export class PaymentsService {
@@ -16,7 +15,6 @@ export class PaymentsService {
   constructor(
     private readonly invoiceService: InvoicesService,
     private readonly mailerService: MailerService,
-    private readonly eventsService: EventsService,
     @Inject('STRIPE') private readonly stripe: Stripe,
   ) {
     this.webhookSecret = process.env.STRIPE_WH_KEY;
@@ -51,10 +49,6 @@ export class PaymentsService {
         },
         success_url: createCheckoutSessionDto.successUrl,
         cancel_url: createCheckoutSessionDto.cancelUrl,
-      });
-      this.eventsService.createCheckoutEvent({
-        msg: 'checkoutCreated',
-        content: stripeResult,
       });
       return stripeResult;
     } catch (error) {
@@ -116,20 +110,10 @@ export class PaymentsService {
     }
     if (event.type === 'invoice.paid') {
 
-      console.log('Invoice was created');
-      this.eventsService.invoicePaidEvent({
-        msg: 'invoicePaid',
-        content: event.data.object,
-      });
-
       const customerInfo = await this.stripe.customers.retrieve(event.data.object.customer);
       const createInvoice = await this.mapToInvoiceDto(customerInfo, event.data.object.lines);
 
       const invoiceId = await this.invoiceService.create(createInvoice);
-      this.eventsService.createInvoiceEvent({
-        msg: 'invoiceCreated',
-        content: invoiceId,
-      });
 
       const pdfBuffer = await this.invoiceService.generatePDF(invoiceId);
       await this.mailerService.sendMail(
@@ -161,8 +145,8 @@ export class PaymentsService {
           },
         ],
       );
+      console.log('Invoice was created');
     }
-    console.log('Invoice was created');
   }
 
   async mapToInvoiceDto(customerDetails: any, lineItemsList: any): Promise<CreateInvoiceDto> {
