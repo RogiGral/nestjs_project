@@ -11,9 +11,8 @@ import { InjectModel } from '@nestjs/mongoose';
 export class AuthService {
   constructor(
     private jwtService: JwtService,
-    private usersService: UsersService,
     @InjectModel(UserEntity.name) private userModel: Model<UserEntity>,
-  ) {}
+  ) { }
 
   async validateUser({ username, password }: LoginPayloadDto): Promise<any> {
     const userFromDB = await this.userModel.findOne({ username });
@@ -25,17 +24,20 @@ export class AuthService {
     return null;
   }
 
-  async login({ username, password }: LoginPayloadDto): Promise<any> {
+  async login({ username, password }: LoginPayloadDto) {
     const userFromDB = await this.userModel.findOne({ username });
     if (!userFromDB) return null;
-    if (ValidatePassword(password, userFromDB.password)) {
+    const validationResult = await ValidatePassword(password, userFromDB.password)
+    if (!validationResult) {
+      throw new Error('Invalid credentials'); // This error will be caught in the catch block in the ChatGateway
+    } else {
       const { password, ...user } = userFromDB;
       return {
         accessToken: this.jwtService.sign(user, { expiresIn: '8h' }),
         refreshToken: this.jwtService.sign(user, { expiresIn: '1d' }),
       };
     }
-    return null;
+
   }
 
   async refreshToken({ username }: LoginPayloadDto): Promise<any> {
