@@ -73,7 +73,7 @@ export class UsersService {
   }
 
   async findAllOnline() {
-    return this.userModel.find({}, { username: 1, online: 1, wsClientId: 1 }).exec();
+    return await this.userModel.find({}, { username: 1, online: 1, wsClientId: 1 }).exec();
   }
 
 
@@ -247,7 +247,7 @@ export class UsersService {
         `User with username '${username}' not found.`,
       );
     }
-    await user.save();
+    const res = await user.save();
 
   }
 

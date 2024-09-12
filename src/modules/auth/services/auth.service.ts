@@ -37,7 +37,6 @@ export class AuthService {
         refreshToken: this.jwtService.sign(user, { expiresIn: '1d' }),
       };
     }
-
   }
 
   async refreshToken({ username }: LoginPayloadDto): Promise<any> {

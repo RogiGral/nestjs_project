@@ -57,9 +57,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (username) {
       await this.usersService.updateUserStatus(username, '', false);
       const users = await this.usersService.findAllOnline();
-      this.server.emit('userList', users);
+      this.server.emit('usersList', users);
     }
   }
+
 
   @UseGuards(JwtWsGuard)
   @SubscribeMessage('newMessage')
